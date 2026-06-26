@@ -14,7 +14,7 @@ The API is inspired by the Python
 staying idiomatic for Go.
 
 ## Status
-This project is still early. APIs may change while the library settles.!!!
+This project is still early. APIs may change while the library settles.
 
 
 ## Installation
