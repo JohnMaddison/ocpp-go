@@ -57,34 +57,55 @@ func main() {
 		EnableKeepaliveLogging(true).
 		EnableTrafficLogging(true)
 
-	err := cp.Connect()
-	if err != nil {
-		log.Printf("Failed to connect to server %v", err)
-		return
-	}
-	time.Sleep(2 * time.Second)
-	log.Printf("Sending bootnotification\n")
-	c := ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: uuid.New().String(), Action: "BootNotification", Payload: ocpp16.BootNotificationRequest{ChargePointModel: model, ChargePointVendor: vendor}}
-	request, err := cp.Ocppcontext.Send(c)
-	if err != nil {
-		log.Printf("Failed to retrieve config %s", err)
-	}
+	// Loop websocket connect untill we succedd
+	for true {
 
-	if request.CallError != nil {
-		log.Printf("Received callerror: %s %+v\n", ChargePointID, request.CallError)
-	}
-	if request.CallResult != nil {
-		log.Printf("Received callresult: %s %+v\n", ChargePointID, request.CallResult)
-
-		result, ok := request.CallResult.Payload.(ocpp16.BootNotificationResponse)
-		if !ok {
-			log.Printf("not a BootNotificationRequest")
-			return
+		err := cp.Connect()
+		if err != nil {
+			log.Printf("Failed to connect to server %v", err)
+			time.Sleep(10 * time.Second)
+		} else {
+			break
 		}
-		log.Printf("Recieved status: %s", string(result.Status))
 
 	}
 
+	// Send bootnotification untill we get accepted
+	for true {
+
+		time.Sleep(2 * time.Second)
+		c := ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: uuid.New().String(), Action: "BootNotification", Payload: ocpp16.BootNotificationRequest{ChargePointModel: model, ChargePointVendor: vendor}}
+		request, err := cp.Ocppcontext.Send(c)
+		if err != nil {
+			log.Printf("Failed to send bootnotification %s", err)
+		}
+
+		if request.CallError != nil {
+			log.Printf("Received callerror: %s %+v\n", ChargePointID, request.CallError)
+		}
+		if request.CallResult != nil {
+
+			result, _ := request.CallResult.Payload.(ocpp16.BootNotificationResponse)
+
+			if result.Status == ocpp16.RegistrationStatusAccepted {
+				log.Printf("Recieved accepted boot response")
+				break
+			} else if result.Status == ocpp16.RegistrationStatusRejected {
+				log.Printf("Recieved rejected boot response")
+				time.Sleep(time.Duration(result.Interval) * time.Second)
+			}
+
+		}
+	}
+
+	statusNotificationCall := ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: uuid.New().String(), Action: string(ocpp16.ActionStatusNotification), Payload: ocpp16.StatusNotificationRequest{ConnectorId: 0, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable}}
+	cp.Ocppcontext.Send(statusNotificationCall)
+	statusNotificationCall = ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: uuid.New().String(), Action: string(ocpp16.ActionStatusNotification), Payload: ocpp16.StatusNotificationRequest{ConnectorId: 1, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable}}
+	cp.Ocppcontext.Send(statusNotificationCall)
+	statusNotificationCall = ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: uuid.New().String(), Action: string(ocpp16.ActionStatusNotification), Payload: ocpp16.StatusNotificationRequest{ConnectorId: 2, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable}}
+	cp.Ocppcontext.Send(statusNotificationCall)
+
+	cp.SendCall(ocpp16.ActionHeartbeat, ocpp16.EmptyPayload{})
 	<-ctx.Done()
 	log.Print("Shutdown complete")
 
