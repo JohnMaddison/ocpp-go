@@ -66,15 +66,19 @@ func (o *OcppCallbacks) ParseMessage(message []byte, ctx *OcppContext) ([]byte, 
 			return nil, fmt.Errorf("invalid message ID")
 		}
 
-		callResult := ocpp.CallResult{
-			MessageType: int(messageType),
-			MessageID:   messageID,
-			Payload:     ocppMessage[2],
-		}
-
 		item, found := ctx.storage.FindByMessageID(messageID)
-
 		if found {
+			payload, err := decodeCallResultPayload(Action(item.Call.Action), ocppMessage[2])
+			if err != nil {
+				return nil, err
+			}
+
+			callResult := ocpp.CallResult{
+				MessageType: int(messageType),
+				MessageID:   messageID,
+				Payload:     payload,
+			}
+
 			item.result <- ResultOrError{CallResult: &callResult, CallError: nil}
 		}
 
@@ -173,4 +177,89 @@ func (o *OcppCallbacks) processCall(MessageID string, Action Action, payload any
 
 	return nil, nil, nil
 
+}
+
+func decodeCallResultPayload(action Action, payload any) (any, error) {
+	switch action {
+	case ActionAuthorize:
+		return decodePayload[AuthorizeResponse](payload)
+	case ActionBootNotification:
+		return decodePayload[BootNotificationResponse](payload)
+	case ActionCancelReservation:
+		return decodePayload[CancelReservationResponse](payload)
+	case ActionCertificateSigned:
+		return decodePayload[CertificateSignedResponse](payload)
+	case ActionChangeAvailability:
+		return decodePayload[ChangeAvailabilityResponse](payload)
+	case ActionChangeConfiguration:
+		return decodePayload[ChangeConfigurationResponse](payload)
+	case ActionClearCache:
+		return decodePayload[ClearCacheResponse](payload)
+	case ActionClearChargingProfile:
+		return decodePayload[ClearChargingProfileResponse](payload)
+	case ActionDataTransfer:
+		return decodePayload[DataTransferResponse](payload)
+	case ActionDeleteCertificate:
+		return decodePayload[DeleteCertificateResponse](payload)
+	case ActionDiagnosticsStatusNotification:
+		return decodePayload[DiagnosticsStatusNotificationResponse](payload)
+	case ActionExtendedTriggerMessage:
+		return decodePayload[ExtendedTriggerMessageResponse](payload)
+	case ActionFirmwareStatusNotification:
+		return decodePayload[FirmwareStatusNotificationResponse](payload)
+	case ActionGetCompositeSchedule:
+		return decodePayload[GetCompositeScheduleResponse](payload)
+	case ActionGetConfiguration:
+		return decodePayload[GetConfigurationResponse](payload)
+	case ActionGetDiagnostics:
+		return decodePayload[GetDiagnosticsResponse](payload)
+	case ActionGetInstalledCertificateIds:
+		return decodePayload[GetInstalledCertificateIdsResponse](payload)
+	case ActionGetLocalListVersion:
+		return decodePayload[GetLocalListVersionResponse](payload)
+	case ActionGetLog:
+		return decodePayload[GetLogResponse](payload)
+	case ActionHeartbeat:
+		return decodePayload[HeartbeatResponse](payload)
+	case ActionInstallCertificate:
+		return decodePayload[InstallCertificateResponse](payload)
+	case ActionLogStatusNotification:
+		return decodePayload[LogStatusNotificationResponse](payload)
+	case ActionMeterValues:
+		return decodePayload[MeterValuesResponse](payload)
+	case ActionRemoteStartTransaction:
+		return decodePayload[RemoteStartTransactionResponse](payload)
+	case ActionRemoteStopTransaction:
+		return decodePayload[RemoteStopTransactionResponse](payload)
+	case ActionReserveNow:
+		return decodePayload[ReserveNowResponse](payload)
+	case ActionReset:
+		return decodePayload[ResetResponse](payload)
+	case ActionSecurityEventNotification:
+		return decodePayload[SecurityEventNotificationResponse](payload)
+	case ActionSendLocalList:
+		return decodePayload[SendLocalListResponse](payload)
+	case ActionSetChargingProfile:
+		return decodePayload[SetChargingProfileResponse](payload)
+	case ActionSignCertificate:
+		return decodePayload[SignCertificateResponse](payload)
+	case ActionSignedFirmwareStatusNotification:
+		return decodePayload[SignedFirmwareStatusNotificationResponse](payload)
+	case ActionSignedUpdateFirmware:
+		return decodePayload[SignedUpdateFirmwareResponse](payload)
+	case ActionStartTransaction:
+		return decodePayload[StartTransactionResponse](payload)
+	case ActionStatusNotification:
+		return decodePayload[StatusNotificationResponse](payload)
+	case ActionStopTransaction:
+		return decodePayload[StopTransactionResponse](payload)
+	case ActionTriggerMessage:
+		return decodePayload[TriggerMessageResponse](payload)
+	case ActionUnlockConnector:
+		return decodePayload[UnlockConnectorResponse](payload)
+	case ActionUpdateFirmware:
+		return decodePayload[UpdateFirmwareResponse](payload)
+	default:
+		return payload, nil
+	}
 }
