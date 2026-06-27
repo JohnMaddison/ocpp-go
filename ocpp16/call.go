@@ -2,6 +2,8 @@ package ocpp16
 
 import "time"
 
+type EmptyPayload struct{}
+
 type AuthorizeRequest struct {
 	IdTag string `json:"idTag" validate:"required,max=20"`
 }

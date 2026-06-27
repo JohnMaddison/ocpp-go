@@ -33,16 +33,16 @@ type Request struct {
 	result chan ResultOrError
 }
 
+// Send sends a call with a default 10-second timeout
+func (s *OcppContext) Send(call ocpp.Call) (*ResultOrError, error) {
+	return s.SendWithTimeout(call, 10*time.Second)
+}
+
 // SendWithTimeout sends a call with a custom timeout
 func (s *OcppContext) SendWithTimeout(call ocpp.Call, timeout time.Duration) (*ResultOrError, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	return s.SendWithContext(ctx, call)
-}
-
-// Send sends a call with a default 10-second timeout
-func (s *OcppContext) Send(call ocpp.Call) (*ResultOrError, error) {
-	return s.SendWithTimeout(call, 10*time.Second)
 }
 
 // SendWithContext sends a call with context for cancellation

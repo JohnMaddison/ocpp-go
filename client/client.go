@@ -5,6 +5,7 @@ import (
 
 	"github.com/JohnMaddison/ocpp-go"
 	"github.com/JohnMaddison/ocpp-go/ocpp16"
+	"github.com/google/uuid"
 )
 
 type Client struct {
@@ -90,4 +91,9 @@ func (c *Client) WithChangeConfigurationHandler(callback ocpp16.ChangeConfigurat
 func (c *Client) WithClearChargingProfileHandler(callback ocpp16.ClearChargingProfileCallback) *Client {
 	c.ocppcallbacks.ClearChargingProfile = callback
 	return c
+}
+
+// Convenience method for sending a call
+func (c *Client) SendCall(action ocpp16.Action, payload any) (*ocpp16.ResultOrError, error) {
+	return c.Ocppcontext.Send(ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: uuid.New().String(), Action: string(action), Payload: payload})
 }
