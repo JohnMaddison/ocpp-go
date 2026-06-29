@@ -53,8 +53,8 @@ func main() {
 		ocpp16.OcppCallbacks{GetConfiguration: getConfiguarationHandler},
 		ocpp.SocketCallbacks{Connected: ConnectedHandler, Disconnect: DisconnectHandler}).
 		WithWebsocketKeepalive(30*time.Second, 45*time.Second).
-		EnableKeepaliveLogging(true).
-		EnableTrafficLogging(true)
+		EnableKeepaliveLogging().
+		EnableTrafficLogging()
 
 	// Loop websocket connect untill we succedd
 	for true {
