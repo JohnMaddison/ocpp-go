@@ -51,8 +51,6 @@ func main() {
 
 	flag.Parse()
 
-	//setupLogging()
-
 	// Handle graceful shutdown
 	_, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -80,9 +78,13 @@ func main() {
 	opts := []server.Option{
 		server.WithPath("ocpp"),
 		server.WithOcpp16Callbacks(ocpp16.OcppCallbacks{
+			Authorize:          authorizeHandler,
 			BootNotification:   bootNotificationHandler,
 			Heartbeat:          heartbeatHandler,
+			MeterValues:        meterValuesHandler,
+			StartTransaction:   startTransactionHandler,
 			StatusNotification: statusNotificationHandler,
+			StopTransaction:    stopTransactionHandler,
 		}),
 		server.WithSocketCallbacks(ocpp.SocketCallbacks{
 			ConnectRequest: ConnectHandler,
@@ -164,4 +166,20 @@ func heartbeatHandler(ctx *ocpp16.OcppContext, request ocpp16.HeartbeatRequest) 
 func statusNotificationHandler(ctx *ocpp16.OcppContext, request ocpp16.StatusNotificationRequest) (*ocpp16.StatusNotificationResponse, *ocpp16.OcppError) {
 	//log.Printf("StatusNotification received from charge point: %s %+v\n", ctx.ChargePointID, request)
 	return &ocpp16.StatusNotificationResponse{}, nil
+}
+
+func authorizeHandler(ctx *ocpp16.OcppContext, request ocpp16.AuthorizeRequest) (*ocpp16.AuthorizeResponse, *ocpp16.OcppError) {
+	return &ocpp16.AuthorizeResponse{IdTagInfo: ocpp16.IdTagInfo{Status: ocpp16.AuthorizationStatusAccepted}}, nil
+}
+
+func startTransactionHandler(ctx *ocpp16.OcppContext, request ocpp16.StartTransactionRequest) (*ocpp16.StartTransactionResponse, *ocpp16.OcppError) {
+	return &ocpp16.StartTransactionResponse{IdTagInfo: ocpp16.IdTagInfo{Status: ocpp16.AuthorizationStatusAccepted}, TransactionId: 10000}, nil
+}
+
+func meterValuesHandler(ctx *ocpp16.OcppContext, request ocpp16.MeterValuesRequest) (*ocpp16.MeterValuesResponse, *ocpp16.OcppError) {
+	return &ocpp16.MeterValuesResponse{}, nil
+}
+
+func stopTransactionHandler(ctx *ocpp16.OcppContext, request ocpp16.StopTransactionRequest) (*ocpp16.StopTransactionResponse, *ocpp16.OcppError) {
+	return &ocpp16.StopTransactionResponse{IdTagInfo: &ocpp16.IdTagInfo{Status: ocpp16.AuthorizationStatusAccepted}}, nil
 }
