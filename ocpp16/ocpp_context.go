@@ -28,6 +28,18 @@ type ResultOrError struct {
 	CallError  *ocpp.CallError
 }
 
+func (s ResultOrError) IsCallError() bool {
+	return s.CallError != nil
+}
+
+func (s ResultOrError) IsCallResult() bool {
+	return s.CallResult != nil
+}
+
+func (s ResultOrError) GetPayload() any {
+	return s.CallResult.Payload
+}
+
 type Request struct {
 	Call   ocpp.Call
 	result chan ResultOrError
