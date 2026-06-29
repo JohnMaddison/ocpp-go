@@ -80,7 +80,7 @@ func WithSocketCallbacks(cb ocpp.SocketCallbacks) Option {
 func WithPath(path string) Option { return func(s *Server) { s.path = path } }
 
 // WithTrafficLogging enables/disables websocket sent-traffic logging.
-func WithTrafficLogging(enable bool) Option { return func(s *Server) { s.logTraffic = enable } }
+func WithTrafficLogging() Option { return func(s *Server) { s.logTraffic = true } }
 
 // WithSubprotocols sets allowed WebSocket subprotocols (default: ["ocpp1.6"]).
 func WithSubprotocols(protocols ...string) Option {
@@ -98,7 +98,7 @@ func WithWebsocketKeepalive(interval, pongTimeout time.Duration) Option {
 }
 
 // WithKeepaliveLogging enables logging of websocket ping/pong frames.
-func WithKeepaliveLogging(enable bool) Option { return func(s *Server) { s.logKeepalive = enable } }
+func WithKeepaliveLogging() Option { return func(s *Server) { s.logKeepalive = true } }
 
 // WithBasicAuth enables HTTP Basic Auth using the given username and password.
 func WithBasicAuth(username, password string) Option {
@@ -116,18 +116,6 @@ func WithTLS(certFile, keyFile string) Option {
 		s.tlsCert = certFile
 		s.tlsKey = keyFile
 	}
-}
-
-// EnableTrafficLogging toggles websocket sent-traffic logging.
-func (s *Server) EnableTrafficLogging(enable bool) *Server {
-	s.logTraffic = enable
-	return s
-}
-
-// EnableKeepaliveLogging toggles websocket ping/pong logging.
-func (s *Server) EnableKeepaliveLogging(enable bool) *Server {
-	s.logKeepalive = enable
-	return s
 }
 
 // Serve starts the HTTP server using the configured path.

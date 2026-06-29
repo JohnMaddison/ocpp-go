@@ -25,28 +25,6 @@ var tlsKey = flag.String("tls-key", "", "path to TLS private key file (enables T
 var basicUser = flag.String("basic-user", "", "basic auth username (enables basic auth when set together with -basic-pass)")
 var basicPass = flag.String("basic-pass", "", "basic auth password (enables basic auth when set together with -basic-user)")
 
-/* func setupLogging() {
-	var level slog.Level
-	if *debug {
-		level = slog.LevelDebug
-	} else {
-		level = slog.LevelInfo
-	}
-
-	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-		Level:     level,
-		AddSource: true,
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-			if a.Key == slog.SourceKey {
-				// Extract the filename from the full path
-				a.Value = slog.StringValue(filepath.Base(a.Value.String()))
-			}
-			return a
-		},
-	}))
-	slog.SetDefault(logger)
-} */
-
 func main() {
 
 	flag.Parse()
@@ -91,8 +69,8 @@ func main() {
 			Connected:      ConnectedHandler,
 			Disconnect:     DisconnectHandler,
 		}),
-		server.WithTrafficLogging(true),
-		server.WithKeepaliveLogging(true),
+		server.WithTrafficLogging(),
+		server.WithKeepaliveLogging(),
 		server.WithWebsocketKeepalive(30*time.Second, 45*time.Second),
 	}
 	if *tlsCert != "" && *tlsKey != "" {

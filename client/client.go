@@ -36,13 +36,13 @@ func NewExtensibleOcppClient(chargepointId string, address string, ocppcallbacks
 }
 
 // EnableTrafficLogging toggles websocket sent-traffic logging.
-func (c *Client) EnableTrafficLogging() *Client {
+func (c *Client) WithTrafficLogging() *Client {
 	c.logTraffic = true
 	return c
 }
 
 // EnableKeepaliveLogging toggles logging of websocket ping/pong frames.
-func (c *Client) EnableKeepaliveLogging() *Client {
+func (c *Client) WithKeepaliveLogging() *Client {
 	c.logKeepalive = true
 	return c
 }
