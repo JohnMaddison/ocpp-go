@@ -48,9 +48,10 @@ func main() {
 
 	chargePointID := "CP_000001"
 	//Create client
-	cp := client.NewClient(chargePointID, "ws://127.0.0.1:9001/ocpp",
-		ocpp16.OCPPCallbacks{GetConfiguration: getConfigurationHandler},
-		ocpp.SocketCallbacks{Connected: ConnectedHandler, Disconnect: DisconnectHandler}).
+	cp := client.NewClient(chargePointID, "ws://127.0.0.1:9001/ocpp").
+		WithConfigurationHandler(getConfigurationHandler).
+		WithConnectedHandler(ConnectedHandler).
+		WithDisconnectHandler(DisconnectHandler).
 		WithWebsocketKeepalive(30*time.Second, 45*time.Second).
 		WithKeepaliveLogging().
 		WithTrafficLogging()
