@@ -13,7 +13,7 @@ import (
 
 func (c *Client) Connect() error {
 	// WebSocket server URL (from client configuration)
-	url := c.address + "/" + c.chargepointId
+	url := c.address + "/" + c.chargePointID
 
 	// Optional Basic Auth
 	headers := http.Header{}
@@ -37,10 +37,10 @@ func (c *Client) Connect() error {
 		return fmt.Errorf("dial failed: %v", err)
 	}
 	// Create a context
-	c.Ocppcontext = ocpp16.NewOcppContext(c.chargepointId)
+	c.OCPPContext = ocpp16.NewOCPPContext(c.chargePointID)
 
 	// Use common runner with optional traffic logging and keepalive settings
-	go ws.Run(conn, c.ocppcallbacks.ParseMessage, c.Ocppcontext, c.socketcallbacks, &ws.Options{
+	go ws.Run(conn, c.ocppCallbacks.ParseMessage, c.OCPPContext, c.socketCallbacks, &ws.Options{
 		LogSent:      c.logTraffic,
 		LogKeepalive: c.logKeepalive,
 		PingInterval: c.pingInterval,

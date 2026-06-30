@@ -1,4 +1,4 @@
-// Package ocpp201 contains the data structures for OCPP 2.0.1 messages.
+// Package ocpp contains shared OCPP message envelope types and helpers.
 package ocpp
 
 import (
@@ -23,8 +23,8 @@ type Call struct {
 	Payload     any    `json:"-"`
 }
 
-// SerializeToOcpp converts a Call object to its JSON representation.
-func (c *Call) SerializeToOcpp() ([]byte, error) {
+// SerializeOCPP converts a Call object to its JSON representation.
+func (c *Call) SerializeOCPP() ([]byte, error) {
 	message := []any{
 		c.MessageType,
 		c.MessageID,
@@ -45,8 +45,8 @@ type CallResult struct {
 	Payload     any    `json:"-"`
 }
 
-// SerializeToOcpp converts a CallResult object to its JSON representation.
-func (cr *CallResult) SerializeToOcpp() ([]byte, error) {
+// SerializeOCPP converts a CallResult object to its JSON representation.
+func (cr *CallResult) SerializeOCPP() ([]byte, error) {
 	message := []any{
 		cr.MessageType,
 		cr.MessageID,
@@ -57,15 +57,15 @@ func (cr *CallResult) SerializeToOcpp() ([]byte, error) {
 
 // CallError represents an error response to a Call.
 type CallError struct {
-	MessageType      int         `json:"-"`
-	MessageID        string      `json:"-"`
-	ErrorCode        string      `json:"errorCode"`
-	ErrorDescription string      `json:"errorDescription"`
-	ErrorDetails     interface{} `json:"errorDetails,omitempty"`
+	MessageType      int    `json:"-"`
+	MessageID        string `json:"-"`
+	ErrorCode        string `json:"errorCode"`
+	ErrorDescription string `json:"errorDescription"`
+	ErrorDetails     any    `json:"errorDetails,omitempty"`
 }
 
-// SerializeToOcpp converts a CallError object to its JSON representation.
-func (ce *CallError) SerializeToOcpp() ([]byte, error) {
+// SerializeOCPP converts a CallError object to its JSON representation.
+func (ce *CallError) SerializeOCPP() ([]byte, error) {
 	message := []any{
 		ce.MessageType,
 		ce.MessageID,

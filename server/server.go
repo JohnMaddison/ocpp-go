@@ -1,3 +1,4 @@
+// Package server provides an OCPP central system websocket server.
 package server
 
 import (
@@ -12,11 +13,11 @@ import (
 type Server struct {
 	address         string
 	path            string
-	ocppcallbacks   ocpp16.OcppCallbacks
-	socketcallbacks ocpp.SocketCallbacks
+	ocppCallbacks   ocpp16.OCPPCallbacks
+	socketCallbacks ocpp.SocketCallbacks
 	logTraffic      bool
 	logKeepalive    bool
-	parser          func(message []byte, ctx *ocpp16.OcppContext) ([]byte, error)
+	parser          func(message []byte, ctx *ocpp16.OCPPContext) ([]byte, error)
 	subprotocols    []string
 	// Basic auth (optional)
 	basicAuthEnabled bool
@@ -31,13 +32,13 @@ type Server struct {
 	pongTimeout  time.Duration
 }
 
-func NewExtensibleOcppServer(address string, ocppcallbacks ocpp16.OcppCallbacks, socketcallbacks ocpp.SocketCallbacks) *Server {
+func NewServerWithCallbacks(address string, ocppCallbacks ocpp16.OCPPCallbacks, socketCallbacks ocpp.SocketCallbacks) *Server {
 	return &Server{
 		address:         address,
 		path:            "ocpp",
-		ocppcallbacks:   ocppcallbacks,
-		socketcallbacks: socketcallbacks,
-		parser:          ocppcallbacks.ParseMessage,
+		ocppCallbacks:   ocppCallbacks,
+		socketCallbacks: socketCallbacks,
+		parser:          ocppCallbacks.ParseMessage,
 	}
 }
 
@@ -56,24 +57,24 @@ func NewServer(address string, opts ...Option) *Server {
 	return s
 }
 
-// WithOcpp16Callbacks sets OCPP 1.6 callbacks and uses its ParseMessage.
-func WithOcpp16Callbacks(cb ocpp16.OcppCallbacks) Option {
+// WithOCPP16Callbacks sets OCPP 1.6 callbacks and uses its ParseMessage.
+func WithOCPP16Callbacks(cb ocpp16.OCPPCallbacks) Option {
 	return func(s *Server) {
 		// Ensure callback handlers are initialized so ParseMessage can route actions
 		cb.InitHandlers()
-		s.ocppcallbacks = cb
+		s.ocppCallbacks = cb
 		s.parser = cb.ParseMessage
 	}
 }
 
 // WithParser sets a custom message parse function.
-func WithParser(p func(message []byte, ctx *ocpp16.OcppContext) ([]byte, error)) Option {
+func WithParser(p func(message []byte, ctx *ocpp16.OCPPContext) ([]byte, error)) Option {
 	return func(s *Server) { s.parser = p }
 }
 
 // WithSocketCallbacks sets socket lifecycle callbacks.
 func WithSocketCallbacks(cb ocpp.SocketCallbacks) Option {
-	return func(s *Server) { s.socketcallbacks = cb }
+	return func(s *Server) { s.socketCallbacks = cb }
 }
 
 // WithPath sets the URL base path (default: "ocpp").
@@ -121,10 +122,10 @@ func WithTLS(certFile, keyFile string) Option {
 // Serve starts the HTTP server using the configured path.
 func (s *Server) Serve() error {
 	// Ensure a parser is configured. If none provided, initialize OCPP 1.6 callbacks parser.
-	s.ocppcallbacks.InitHandlers()
+	s.ocppCallbacks.InitHandlers()
 	if s.parser == nil {
 
-		s.parser = s.ocppcallbacks.ParseMessage
+		s.parser = s.ocppCallbacks.ParseMessage
 	}
 	http.HandleFunc(fmt.Sprintf("/%s/{cpid}", s.path), func(w http.ResponseWriter, r *http.Request) {
 		s.wshandler(w, r)
@@ -135,5 +136,5 @@ func (s *Server) Serve() error {
 	return http.ListenAndServe(s.address, nil)
 }
 
-// Backward-compatible entrypoint that accepts the path explicitly.
+// ListenAndServe starts the server after setting the URL base path.
 func (s *Server) ListenAndServe(path string) error { s.path = path; return s.Serve() }

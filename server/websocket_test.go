@@ -18,14 +18,14 @@ func TestWshandler_BootNotification(t *testing.T) {
 	var calledBootNotification bool
 
 	server := &Server{
-		socketcallbacks: ocpp.SocketCallbacks{
+		socketCallbacks: ocpp.SocketCallbacks{
 			Connected: func() {
 				t.Log("Connected callback triggered")
 				calledConnected = true
 			},
 		},
-		ocppcallbacks: ocpp16.OcppCallbacks{
-			BootNotification: func(ctx *ocpp16.OcppContext, request ocpp16.BootNotificationRequest) (*ocpp16.BootNotificationResponse, *ocpp16.OcppError) {
+		ocppCallbacks: ocpp16.OCPPCallbacks{
+			BootNotification: func(ctx *ocpp16.OCPPContext, request ocpp16.BootNotificationRequest) (*ocpp16.BootNotificationResponse, *ocpp16.OCPPError) {
 				t.Log("BootNotification callback triggered")
 				calledBootNotification = true
 				return &ocpp16.BootNotificationResponse{
@@ -36,7 +36,7 @@ func TestWshandler_BootNotification(t *testing.T) {
 			},
 		},
 	}
-	server.ocppcallbacks.InitHandlers()
+	server.ocppCallbacks.InitHandlers()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ws/{cpid}", func(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +63,7 @@ func TestWshandler_BootNotification(t *testing.T) {
 		2,
 		"abc123",
 		"BootNotification",
-		map[string]interface{}{
+		map[string]any{
 			"chargePointModel":  "TestModel",
 			"chargePointVendor": "TestVendor",
 		},

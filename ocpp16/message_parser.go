@@ -10,7 +10,7 @@ import (
 
 type OCPPMessage []any
 
-func (o *OcppCallbacks) ParseMessage(message []byte, ctx *OcppContext) ([]byte, error) {
+func (o *OCPPCallbacks) ParseMessage(message []byte, ctx *OCPPContext) ([]byte, error) {
 	// Parse the OCPP message using standard JSON
 	var ocppMessage OCPPMessage
 	if err := json.Unmarshal(message, &ocppMessage); err != nil {
@@ -49,9 +49,9 @@ func (o *OcppCallbacks) ParseMessage(message []byte, ctx *OcppContext) ([]byte, 
 		}
 
 		if callError != nil {
-			return callError.SerializeToOcpp()
+			return callError.SerializeOCPP()
 		} else if callResult != nil {
-			return callResult.SerializeToOcpp()
+			return callResult.SerializeOCPP()
 		}
 	}
 
@@ -106,7 +106,7 @@ func (o *OcppCallbacks) ParseMessage(message []byte, ctx *OcppContext) ([]byte, 
 			return nil, fmt.Errorf("invalid error description")
 		}
 
-		var errorDetails interface{}
+		var errorDetails any
 		if len(ocppMessage) == 5 {
 			errorDetails = ocppMessage[4]
 		}
@@ -131,14 +131,14 @@ func (o *OcppCallbacks) ParseMessage(message []byte, ctx *OcppContext) ([]byte, 
 	return nil, fmt.Errorf("message type not implemented: %d", int(messageType))
 }
 
-func (o *OcppCallbacks) processCall(MessageID string, Action Action, payload any, ctx *OcppContext) (*ocpp.CallResult, *ocpp.CallError, error) {
+func (o *OCPPCallbacks) processCall(messageID string, action Action, payload any, ctx *OCPPContext) (*ocpp.CallResult, *ocpp.CallError, error) {
 
-	handler, ok := o.handlers[Action]
+	handler, ok := o.handlers[action]
 	if !ok || handler.callback == nil {
-		log.Printf("MessageId %s no handler found for Action: %s", MessageID, Action)
+		log.Printf("messageID %s no handler found for action: %s", messageID, action)
 		return nil, &ocpp.CallError{
 			MessageType:      ocpp.MessageTypeCallError,
-			MessageID:        MessageID,
+			MessageID:        messageID,
 			ErrorCode:        "NotSupported",
 			ErrorDescription: "Requested Action is recognized but not supported by the receiver",
 			ErrorDetails:     nil,
@@ -149,7 +149,7 @@ func (o *OcppCallbacks) processCall(MessageID string, Action Action, payload any
 	if err != nil {
 		return nil, &ocpp.CallError{
 			MessageType:      ocpp.MessageTypeCallError,
-			MessageID:        MessageID,
+			MessageID:        messageID,
 			ErrorCode:        "FormationViolation",
 			ErrorDescription: "Payload for Action is syntactically incorrect or not conform the PDU structure for Action",
 			ErrorDetails:     err.Error(),
@@ -160,7 +160,7 @@ func (o *OcppCallbacks) processCall(MessageID string, Action Action, payload any
 	if callErr != nil {
 		return nil, &ocpp.CallError{
 			MessageType:      ocpp.MessageTypeCallError,
-			MessageID:        MessageID,
+			MessageID:        messageID,
 			ErrorCode:        callErr.ErrorCode,
 			ErrorDescription: callErr.ErrorDescription,
 			ErrorDetails:     callErr.ErrorDetails,
@@ -170,7 +170,7 @@ func (o *OcppCallbacks) processCall(MessageID string, Action Action, payload any
 	if reply != nil {
 		return &ocpp.CallResult{
 			MessageType: ocpp.MessageTypeCallResult,
-			MessageID:   MessageID,
+			MessageID:   messageID,
 			Payload:     reply,
 		}, nil, nil
 	}

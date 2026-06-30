@@ -46,10 +46,10 @@ func main() {
 		}()
 	}
 
-	ChargePointID := "CP_000001"
+	chargePointID := "CP_000001"
 	//Create client
-	cp := client.NewExtensibleOcppClient(ChargePointID, "ws://127.0.0.1:9001/ocpp",
-		ocpp16.OcppCallbacks{GetConfiguration: getConfiguarationHandler},
+	cp := client.NewClient(chargePointID, "ws://127.0.0.1:9001/ocpp",
+		ocpp16.OCPPCallbacks{GetConfiguration: getConfigurationHandler},
 		ocpp.SocketCallbacks{Connected: ConnectedHandler, Disconnect: DisconnectHandler}).
 		WithWebsocketKeepalive(30*time.Second, 45*time.Second).
 		WithKeepaliveLogging().
@@ -79,33 +79,33 @@ func main() {
 		}
 
 		if request.IsCallError() {
-			log.Printf("Received callerror: %s %+v\n", ChargePointID, request.CallError)
+			log.Printf("Received callerror: %s %+v\n", chargePointID, request.CallError)
 			time.Sleep(time.Duration(10) * time.Second)
 		} else if request.IsCallResult() {
 
 			bootNotificationResponse, _ := request.GetPayload().(ocpp16.BootNotificationResponse)
 
 			if bootNotificationResponse.Status == ocpp16.RegistrationStatusAccepted {
-				log.Printf("Recieved accepted boot response")
+				log.Printf("Received accepted boot response")
 				bootNotificationResponseInterval = bootNotificationResponse.Interval
 				break
 			} else {
-				log.Printf("Recieved non accepted boot response")
+				log.Printf("Received non accepted boot response")
 				time.Sleep(time.Duration(bootNotificationResponse.Interval) * time.Second)
 			}
 
 		}
 	}
 
-	cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorId: 0, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
-	cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorId: 1, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
-	cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorId: 2, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
+	cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: 0, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
+	cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: 1, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
+	cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: 2, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
 
-	chargingConnectorId := 1
-	cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorId: chargingConnectorId, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusPreparing})
+	chargingConnectorID := 1
+	cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: chargingConnectorID, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusPreparing})
 
 	tagIdentifier := "0000-0000-0001"
-	authorizeRequest, err := cp.SendCall(ocpp16.ActionAuthorize, ocpp16.AuthorizeRequest{IdTag: tagIdentifier})
+	authorizeRequest, err := cp.SendCall(ocpp16.ActionAuthorize, ocpp16.AuthorizeRequest{IDTag: tagIdentifier})
 
 	if err != nil {
 		log.Printf("Failed to send authorize request %s", err)
@@ -113,16 +113,16 @@ func main() {
 	}
 
 	if authorizeRequest.IsCallError() {
-		log.Printf("Received callerror: %s %+v\n", ChargePointID, authorizeRequest.CallError)
+		log.Printf("Received callerror: %s %+v\n", chargePointID, authorizeRequest.CallError)
 	} else if authorizeRequest.IsCallResult() {
 
 		authorizeResponse, _ := authorizeRequest.GetPayload().(ocpp16.AuthorizeResponse)
 
-		if authorizeResponse.IdTagInfo.Status == ocpp16.AuthorizationStatusAccepted {
+		if authorizeResponse.IDTagInfo.Status == ocpp16.AuthorizationStatusAccepted {
 			//Tag is valid
 
 			meterStart := 0
-			startTransactionRequest, err := cp.SendCall(ocpp16.ActionStartTransaction, ocpp16.StartTransactionRequest{ConnectorId: chargingConnectorId, IdTag: tagIdentifier, MeterStart: meterStart, Timestamp: time.Now()})
+			startTransactionRequest, err := cp.SendCall(ocpp16.ActionStartTransaction, ocpp16.StartTransactionRequest{ConnectorID: chargingConnectorID, IDTag: tagIdentifier, MeterStart: meterStart, Timestamp: time.Now()})
 
 			if err != nil {
 				log.Printf("Failed to send startTransaction request %s", err)
@@ -133,9 +133,9 @@ func main() {
 
 				startTransactionResponse, _ := startTransactionRequest.GetPayload().(ocpp16.StartTransactionResponse)
 
-				if startTransactionResponse.IdTagInfo.Status == ocpp16.AuthorizationStatusAccepted {
+				if startTransactionResponse.IDTagInfo.Status == ocpp16.AuthorizationStatusAccepted {
 
-					cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorId: chargingConnectorId, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusCharging})
+					cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: chargingConnectorID, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusCharging})
 
 					meterValuesTicker := time.NewTicker(5 * time.Second)
 					defer meterValuesTicker.Stop()
@@ -144,22 +144,18 @@ func main() {
 					for {
 						select {
 						case <-meterValuesTicker.C:
-							context := ocpp16.ReadingContextSamplePeriodic
-							measurand := ocpp16.MeasurandEnergyActiveImportRegister
-							unit := "Wh"
-
 							cp.SendCall(ocpp16.ActionMeterValues, ocpp16.MeterValuesRequest{
-								ConnectorId:   chargingConnectorId,
-								TransactionId: &startTransactionResponse.TransactionId,
+								ConnectorID:   chargingConnectorID,
+								TransactionID: &startTransactionResponse.TransactionID,
 								MeterValue: []ocpp16.MeterValue{
 									{
 										Timestamp: time.Now(),
 										SampledValue: []ocpp16.SampledValue{
 											{
 												Value:     strconv.Itoa(meterStart),
-												Context:   &context,
-												Measurand: &measurand,
-												Unit:      &unit,
+												Context:   ocpp.Ptr(ocpp16.ReadingContextSamplePeriodic),
+												Measurand: ocpp.Ptr(ocpp16.MeasurandEnergyActiveImportRegister),
+												Unit:      ocpp.Ptr("Wh"),
 											},
 										},
 									},
@@ -178,15 +174,15 @@ func main() {
 						}
 					}
 				}
-				reason := ocpp16.ReasonEVDisconnected
-				_, err := cp.SendCall(ocpp16.ActionStopTransaction, ocpp16.StopTransactionRequest{IdTag: &tagIdentifier, MeterStop: meterStart, Timestamp: time.Now(), TransactionId: startTransactionResponse.TransactionId, Reason: &reason})
+
+				_, err := cp.SendCall(ocpp16.ActionStopTransaction, ocpp16.StopTransactionRequest{IDTag: &tagIdentifier, MeterStop: meterStart, Timestamp: time.Now(), TransactionID: startTransactionResponse.TransactionID, Reason: ocpp.Ptr(ocpp16.ReasonEVDisconnected)})
 
 				if err != nil {
 					log.Printf("Failed to send stopTransaction request %s", err)
 				}
 
-				cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorId: chargingConnectorId, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusFinishing})
-				cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorId: chargingConnectorId, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
+				cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: chargingConnectorID, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusFinishing})
+				cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: chargingConnectorID, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
 			}
 
 		}
@@ -219,7 +215,7 @@ func DisconnectHandler() {
 	log.Printf("Disconnected")
 }
 
-func getConfiguarationHandler(ctx *ocpp16.OcppContext, request ocpp16.GetConfigurationRequest) (*ocpp16.GetConfigurationResponse, *ocpp16.OcppError) {
+func getConfigurationHandler(ctx *ocpp16.OCPPContext, request ocpp16.GetConfigurationRequest) (*ocpp16.GetConfigurationResponse, *ocpp16.OCPPError) {
 	log.Printf("GetConfiguration request received from server: %s %+v\n", ctx.ChargePointID, request)
 
 	conf := []ocpp16.KeyValue{

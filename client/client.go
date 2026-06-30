@@ -1,3 +1,4 @@
+// Package client provides an OCPP charge point websocket client.
 package client
 
 import (
@@ -9,11 +10,11 @@ import (
 )
 
 type Client struct {
-	chargepointId   string
+	chargePointID   string
 	address         string
-	ocppcallbacks   ocpp16.OcppCallbacks
-	socketcallbacks ocpp.SocketCallbacks
-	Ocppcontext     *ocpp16.OcppContext
+	ocppCallbacks   ocpp16.OCPPCallbacks
+	socketCallbacks ocpp.SocketCallbacks
+	OCPPContext     *ocpp16.OCPPContext
 	logTraffic      bool
 	logKeepalive    bool
 	username        string
@@ -22,16 +23,16 @@ type Client struct {
 	pongTimeout     time.Duration
 }
 
-func NewExtensibleOcppClient(chargepointId string, address string, ocppcallbacks ocpp16.OcppCallbacks, socketcallbacks ocpp.SocketCallbacks) *Client {
+func NewClient(chargePointID, address string, ocppCallbacks ocpp16.OCPPCallbacks, socketCallbacks ocpp.SocketCallbacks) *Client {
 
 	client := &Client{
-		chargepointId:   chargepointId,
+		chargePointID:   chargePointID,
 		address:         address,
-		ocppcallbacks:   ocppcallbacks,
-		socketcallbacks: socketcallbacks,
-		Ocppcontext:     nil,
+		ocppCallbacks:   ocppCallbacks,
+		socketCallbacks: socketCallbacks,
+		OCPPContext:     nil,
 	}
-	client.ocppcallbacks.InitHandlers()
+	client.ocppCallbacks.InitHandlers()
 	return client
 }
 
@@ -60,7 +61,7 @@ func (c *Client) WithBasicAuth(username, password string) *Client {
 }
 
 func (c *Client) WithOfflineHandler(callback ocpp.DisconnectCallback) *Client {
-	c.socketcallbacks.Disconnect = callback
+	c.socketCallbacks.Disconnect = callback
 	return c
 }
 
@@ -74,26 +75,26 @@ func (c *Client) WithWebsocketKeepalive(interval, pongTimeout time.Duration) *Cl
 }
 
 func (c *Client) WithDataTransferHandler(callback ocpp16.DataTransferCallback) *Client {
-	c.ocppcallbacks.DataTransfer = callback
+	c.ocppCallbacks.DataTransfer = callback
 	return c
 }
 
 func (c *Client) WithConfigurationHandler(callback ocpp16.GetConfigurationCallback) *Client {
-	c.ocppcallbacks.GetConfiguration = callback
+	c.ocppCallbacks.GetConfiguration = callback
 	return c
 }
 
 func (c *Client) WithChangeConfigurationHandler(callback ocpp16.ChangeConfigurationCallback) *Client {
-	c.ocppcallbacks.ChangeConfiguration = callback
+	c.ocppCallbacks.ChangeConfiguration = callback
 	return c
 }
 
 func (c *Client) WithClearChargingProfileHandler(callback ocpp16.ClearChargingProfileCallback) *Client {
-	c.ocppcallbacks.ClearChargingProfile = callback
+	c.ocppCallbacks.ClearChargingProfile = callback
 	return c
 }
 
-// Convenience method for sending a call
+// SendCall sends a typed OCPP 1.6 call payload.
 func (c *Client) SendCall(action ocpp16.Action, payload any) (*ocpp16.ResultOrError, error) {
-	return c.Ocppcontext.Send(ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: uuid.New().String(), Action: string(action), Payload: payload})
+	return c.OCPPContext.Send(ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: uuid.New().String(), Action: string(action), Payload: payload})
 }

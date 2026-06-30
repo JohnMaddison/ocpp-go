@@ -27,7 +27,7 @@ func (o *Server) wshandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Allow/deny via user-defined callback if provided
-	if o.socketcallbacks.ConnectRequest != nil && !o.socketcallbacks.ConnectRequest(ocpp.ConnectRequest{R: r, W: &w}) {
+	if o.socketCallbacks.ConnectRequest != nil && !o.socketCallbacks.ConnectRequest(ocpp.ConnectRequest{R: r, W: &w}) {
 		return
 	}
 
@@ -46,15 +46,15 @@ func (o *Server) wshandler(w http.ResponseWriter, r *http.Request) {
 	defer c.Close()
 
 	// Create a context
-	context := ocpp16.NewOcppContext(cpid)
+	context := ocpp16.NewOCPPContext(cpid)
 
 	// Choose parser: prefer custom parser when provided
 	parser := o.parser
 	if parser == nil {
-		parser = o.ocppcallbacks.ParseMessage
+		parser = o.ocppCallbacks.ParseMessage
 	}
 	// Use common runner with optional traffic logging and keepalive settings
-	ws.Run(c, parser, context, o.socketcallbacks, &ws.Options{
+	ws.Run(c, parser, context, o.socketCallbacks, &ws.Options{
 		LogSent:      o.logTraffic,
 		LogKeepalive: o.logKeepalive,
 		PingInterval: o.pingInterval,

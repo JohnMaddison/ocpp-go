@@ -3,7 +3,7 @@ package ocpp16
 import "time"
 
 type AuthorizeResponse struct {
-	IdTagInfo IdTagInfo `json:"idTagInfo" validate:"required"`
+	IDTagInfo IDTagInfo `json:"idTagInfo" validate:"required"`
 }
 
 type BootNotificationResponse struct {
@@ -30,7 +30,7 @@ type ClearChargingProfileResponse struct {
 
 type DataTransferResponse struct {
 	Status DataTransferStatus `json:"status" validate:"required"`
-	Data   interface{}        `json:"data,omitempty"`
+	Data   any                `json:"data,omitempty"`
 }
 
 type DiagnosticsStatusNotificationResponse struct{}
@@ -81,14 +81,14 @@ type SetChargingProfileResponse struct {
 }
 
 type StartTransactionResponse struct {
-	IdTagInfo     IdTagInfo `json:"idTagInfo" validate:"required"`
-	TransactionId int       `json:"transactionId"`
+	IDTagInfo     IDTagInfo `json:"idTagInfo" validate:"required"`
+	TransactionID int       `json:"transactionId"`
 }
 
 type StatusNotificationResponse struct{}
 
 type StopTransactionResponse struct {
-	IdTagInfo *IdTagInfo `json:"idTagInfo,omitempty"`
+	IDTagInfo *IDTagInfo `json:"idTagInfo,omitempty"`
 }
 
 type TriggerMessageResponse struct {

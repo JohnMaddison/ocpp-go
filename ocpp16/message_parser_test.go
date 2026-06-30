@@ -8,8 +8,8 @@ import (
 )
 
 func TestParseMessage_DecodesBootNotificationCallResult(t *testing.T) {
-	callbacks := OcppCallbacks{}
-	ctx := NewOcppContext("CP_TEST")
+	callbacks := OCPPCallbacks{}
+	ctx := NewOCPPContext("CP_TEST")
 	result := make(chan ResultOrError, 1)
 
 	ctx.storage.Add(Request{

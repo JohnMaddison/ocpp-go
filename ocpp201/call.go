@@ -71,9 +71,9 @@ type CustomerInformationRequest struct {
 }
 
 type DataTransferRequest struct {
-	VendorID  string      `json:"vendorId" validate:"required,max=255"`
-	MessageID *string     `json:"messageId,omitempty" validate:"max=50"`
-	Data      interface{} `json:"data,omitempty"`
+	VendorID  string  `json:"vendorId" validate:"required,max=255"`
+	MessageID *string `json:"messageId,omitempty" validate:"max=50"`
+	Data      any     `json:"data,omitempty"`
 }
 
 type DeleteCertificateRequest struct {

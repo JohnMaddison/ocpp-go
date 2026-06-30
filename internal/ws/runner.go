@@ -27,7 +27,7 @@ type Options struct {
 
 // Run starts read/write pumps for a websocket OCPP connection.
 // It invokes socket callbacks for connect/disconnect lifecycle.
-func Run(conn *websocket.Conn, parse func(message []byte, ctx *ocpp16.OcppContext) ([]byte, error), ctx *ocpp16.OcppContext, socketCallbacks ocpp.SocketCallbacks, opts ...*Options) {
+func Run(conn *websocket.Conn, parse func(message []byte, ctx *ocpp16.OCPPContext) ([]byte, error), ctx *ocpp16.OCPPContext, socketCallbacks ocpp.SocketCallbacks, opts ...*Options) {
 	var opt *Options
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -147,7 +147,7 @@ func Run(conn *websocket.Conn, parse func(message []byte, ctx *ocpp16.OcppContex
 					return
 				}
 
-				payload, serializeErr := message.Call.SerializeToOcpp()
+				payload, serializeErr := message.Call.SerializeOCPP()
 				if serializeErr != nil {
 					log.Printf("serialize error: %s", serializeErr)
 					return

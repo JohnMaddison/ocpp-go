@@ -65,7 +65,7 @@ type CustomerInformationResponse struct {
 
 type DataTransferResponse struct {
 	Status     DataTransferStatus `json:"status" validate:"required"`
-	Data       interface{}        `json:"data,omitempty"`
+	Data       any                `json:"data,omitempty"`
 	StatusInfo *StatusInfo        `json:"statusInfo,omitempty"`
 }
 

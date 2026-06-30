@@ -8,15 +8,15 @@ import (
 	"github.com/JohnMaddison/ocpp-go"
 )
 
-type OcppContext struct {
+type OCPPContext struct {
 	ChargePointID string
 	Queue         chan Request
 	storage       *CircularBuffer
 }
 
-func NewOcppContext(ChargePointID string) *OcppContext {
+func NewOCPPContext(ChargePointID string) *OCPPContext {
 	capacity := 10
-	return &OcppContext{
+	return &OCPPContext{
 		ChargePointID: ChargePointID,
 		Queue:         make(chan Request, capacity),
 		storage:       NewCircularBuffer(capacity),
@@ -46,19 +46,19 @@ type Request struct {
 }
 
 // Send sends a call with a default 10-second timeout
-func (s *OcppContext) Send(call ocpp.Call) (*ResultOrError, error) {
+func (s *OCPPContext) Send(call ocpp.Call) (*ResultOrError, error) {
 	return s.SendWithTimeout(call, 10*time.Second)
 }
 
 // SendWithTimeout sends a call with a custom timeout
-func (s *OcppContext) SendWithTimeout(call ocpp.Call, timeout time.Duration) (*ResultOrError, error) {
+func (s *OCPPContext) SendWithTimeout(call ocpp.Call, timeout time.Duration) (*ResultOrError, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	return s.SendWithContext(ctx, call)
 }
 
 // SendWithContext sends a call with context for cancellation
-func (s *OcppContext) SendWithContext(ctx context.Context, call ocpp.Call) (*ResultOrError, error) {
+func (s *OCPPContext) SendWithContext(ctx context.Context, call ocpp.Call) (*ResultOrError, error) {
 	msg := Request{
 		Call:   call,
 		result: make(chan ResultOrError, 1), // Buffered to prevent goroutine leaks
@@ -82,14 +82,14 @@ func (s *OcppContext) SendWithContext(ctx context.Context, call ocpp.Call) (*Res
 	}
 }
 
-func (s *OcppContext) SendCallAndExpectResult(action string, payload any) (*ocpp.CallResult, error) {
+func (s *OCPPContext) SendCallAndExpectResult(action string, payload any) (*ocpp.CallResult, error) {
 	call := ocpp.NewCall(action, payload)
 	request, err := s.Send(*call)
 
 	if err != nil {
 		return nil, fmt.Errorf("Failed to send %s call, error: %s", action, err)
 	} else if request.CallError != nil {
-		return nil, fmt.Errorf("Recieved Callerror when sending %s, error: %s", action, err)
+		return nil, fmt.Errorf("Received CallError when sending %s, error: %s", action, err)
 	}
 	return request.CallResult, nil
 }

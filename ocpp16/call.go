@@ -5,7 +5,7 @@ import "time"
 type EmptyPayload struct{}
 
 type AuthorizeRequest struct {
-	IdTag string `json:"idTag" validate:"required,max=20"`
+	IDTag string `json:"idTag" validate:"required,max=20"`
 }
 
 type BootNotificationRequest struct {
@@ -21,7 +21,7 @@ type BootNotificationRequest struct {
 }
 
 type ChangeAvailabilityRequest struct {
-	ConnectorId int              `json:"connectorId" validate:"gte=0"`
+	ConnectorID int              `json:"connectorId" validate:"gte=0"`
 	Type        AvailabilityType `json:"type" validate:"required"`
 }
 
@@ -34,15 +34,15 @@ type ClearCacheRequest struct{}
 
 type ClearChargingProfileRequest struct {
 	ID                     *int                        `json:"id,omitempty"`
-	ConnectorId            *int                        `json:"connectorId,omitempty" validate:"gte=0"`
+	ConnectorID            *int                        `json:"connectorId,omitempty" validate:"gte=0"`
 	ChargingProfilePurpose *ChargingProfilePurposeType `json:"chargingProfilePurpose,omitempty"`
 	StackLevel             *int                        `json:"stackLevel,omitempty" validate:"gte=0"`
 }
 
 type DataTransferRequest struct {
-	VendorId  string      `json:"vendorId" validate:"required,max=255"`
-	MessageId *string     `json:"messageId,omitempty" validate:"max=50"`
-	Data      interface{} `json:"data,omitempty"`
+	VendorID  string  `json:"vendorId" validate:"required,max=255"`
+	MessageID *string `json:"messageId,omitempty" validate:"max=50"`
+	Data      any     `json:"data,omitempty"`
 }
 
 type DiagnosticsStatusNotificationRequest struct {
@@ -55,7 +55,7 @@ type FirmwareStatusNotificationRequest struct {
 
 type ExtendedTriggerMessageRequest struct {
 	RequestedMessage MessageTrigger `json:"requestedMessage" validate:"required,oneof=BootNotification DiagnosticsStatusNotification FirmwareStatusNotification Heartbeat MeterValues StatusNotification"`
-	ConnectorId      *int           `json:"connectorId,omitempty" validate:"gt=0"`
+	ConnectorID      *int           `json:"connectorId,omitempty" validate:"gt=0"`
 }
 
 type GetConfigurationRequest struct {
@@ -75,19 +75,19 @@ type GetLocalListVersionRequest struct{}
 type HeartbeatRequest struct{}
 
 type MeterValuesRequest struct {
-	ConnectorId   int          `json:"connectorId" validate:"gte=0"`
-	TransactionId *int         `json:"transactionId,omitempty"`
+	ConnectorID   int          `json:"connectorId" validate:"gte=0"`
+	TransactionID *int         `json:"transactionId,omitempty"`
 	MeterValue    []MeterValue `json:"meterValue" validate:"required,min=1"`
 }
 
 type RemoteStartTransactionRequest struct {
-	ConnectorId     *int             `json:"connectorId,omitempty" validate:"gt=0"`
-	IdTag           string           `json:"idTag" validate:"required,max=20"`
+	ConnectorID     *int             `json:"connectorId,omitempty" validate:"gt=0"`
+	IDTag           string           `json:"idTag" validate:"required,max=20"`
 	ChargingProfile *ChargingProfile `json:"chargingProfile,omitempty"`
 }
 
 type RemoteStopTransactionRequest struct {
-	TransactionId int `json:"transactionId"`
+	TransactionID int `json:"transactionId"`
 }
 
 type ResetRequest struct {
@@ -101,44 +101,44 @@ type SendLocalListRequest struct {
 }
 
 type SetChargingProfileRequest struct {
-	ConnectorId     int             `json:"connectorId" validate:"gte=0"`
+	ConnectorID     int             `json:"connectorId" validate:"gte=0"`
 	ChargingProfile ChargingProfile `json:"csChargingProfiles" validate:"required"`
 }
 
 type StartTransactionRequest struct {
-	ConnectorId   int       `json:"connectorId" validate:"gt=0"`
-	IdTag         string    `json:"idTag" validate:"required,max=20"`
+	ConnectorID   int       `json:"connectorId" validate:"gt=0"`
+	IDTag         string    `json:"idTag" validate:"required,max=20"`
 	MeterStart    int       `json:"meterStart"`
-	ReservationId *int      `json:"reservationId,omitempty"`
+	ReservationID *int      `json:"reservationId,omitempty"`
 	Timestamp     time.Time `json:"timestamp"`
 }
 
 type StatusNotificationRequest struct {
-	ConnectorId     int                  `json:"connectorId" validate:"gte=0"`
+	ConnectorID     int                  `json:"connectorId" validate:"gte=0"`
 	ErrorCode       ChargePointErrorCode `json:"errorCode" validate:"required"`
 	Info            *string              `json:"info,omitempty" validate:"max=50"`
 	Status          ChargePointStatus    `json:"status" validate:"required"`
 	Timestamp       *time.Time           `json:"timestamp,omitempty"`
-	VendorId        *string              `json:"vendorId,omitempty" validate:"max=255"`
+	VendorID        *string              `json:"vendorId,omitempty" validate:"max=255"`
 	VendorErrorCode *string              `json:"vendorErrorCode,omitempty" validate:"max=50"`
 }
 
 type StopTransactionRequest struct {
-	IdTag           *string      `json:"idTag,omitempty" validate:"max=20"`
+	IDTag           *string      `json:"idTag,omitempty" validate:"max=20"`
 	MeterStop       int          `json:"meterStop"`
 	Timestamp       time.Time    `json:"timestamp"`
-	TransactionId   int          `json:"transactionId"`
+	TransactionID   int          `json:"transactionId"`
 	Reason          *Reason      `json:"reason,omitempty"`
 	TransactionData []MeterValue `json:"transactionData,omitempty"`
 }
 
 type TriggerMessageRequest struct {
 	RequestedMessage MessageTrigger `json:"requestedMessage" validate:"required"`
-	ConnectorId      *int           `json:"connectorId,omitempty" validate:"gt=0"`
+	ConnectorID      *int           `json:"connectorId,omitempty" validate:"gt=0"`
 }
 
 type UnlockConnectorRequest struct {
-	ConnectorId int `json:"connectorId" validate:"gt=0"`
+	ConnectorID int `json:"connectorId" validate:"gt=0"`
 }
 
 type UpdateFirmwareRequest struct {

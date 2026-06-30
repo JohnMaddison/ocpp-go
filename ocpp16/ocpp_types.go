@@ -39,10 +39,10 @@ type ChargingSchedulePeriod struct {
 	NumberPhases *int    `json:"numberPhases,omitempty"`
 }
 
-// IdTagInfo contains information about an identifier.
-type IdTagInfo struct {
+// IDTagInfo contains information about an identifier.
+type IDTagInfo struct {
 	ExpiryDate  *time.Time          `json:"expiryDate,omitempty"`
-	ParentIdTag *string             `json:"parentIdTag,omitempty" validate:"max=20"`
+	ParentIDTag *string             `json:"parentIdTag,omitempty" validate:"max=20"`
 	Status      AuthorizationStatus `json:"status" validate:"required"`
 }
 
@@ -79,6 +79,6 @@ type SampledValue struct {
 
 // AuthorizationData is used in the local authorization list.
 type AuthorizationData struct {
-	IdTag     string     `json:"idTag" validate:"required,max=20"`
-	IdTagInfo *IdTagInfo `json:"idTagInfo,omitempty"`
+	IDTag     string     `json:"idTag" validate:"required,max=20"`
+	IDTagInfo *IDTagInfo `json:"idTagInfo,omitempty"`
 }
