@@ -52,23 +52,18 @@ func main() {
 		}()
 	}
 
-	// Build options consistently
 	opts := []server.Option{
 		server.WithPath("ocpp"),
-		server.WithOCPP16Callbacks(ocpp16.OCPPCallbacks{
-			Authorize:          authorizeHandler,
-			BootNotification:   bootNotificationHandler,
-			Heartbeat:          heartbeatHandler,
-			MeterValues:        meterValuesHandler,
-			StartTransaction:   startTransactionHandler,
-			StatusNotification: statusNotificationHandler,
-			StopTransaction:    stopTransactionHandler,
-		}),
-		server.WithSocketCallbacks(ocpp.SocketCallbacks{
-			ConnectRequest: ConnectHandler,
-			Connected:      ConnectedHandler,
-			Disconnect:     DisconnectHandler,
-		}),
+		server.WithAuthorizeHandler(authorizeHandler),
+		server.WithBootNotificationHandler(bootNotificationHandler),
+		server.WithHeartbeatHandler(heartbeatHandler),
+		server.WithMeterValuesHandler(meterValuesHandler),
+		server.WithStartTransactionHandler(startTransactionHandler),
+		server.WithStatusNotificationHandler(statusNotificationHandler),
+		server.WithStopTransactionHandler(stopTransactionHandler),
+		server.WithConnectRequestHandler(ConnectHandler),
+		server.WithConnectedHandler(ConnectedHandler),
+		server.WithDisconnectHandler(DisconnectHandler),
 		server.WithTrafficLogging(),
 		server.WithKeepaliveLogging(),
 		server.WithWebsocketKeepalive(30*time.Second, 45*time.Second),
@@ -117,11 +112,11 @@ func bootNotificationHandler(ctx *ocpp16.OCPPContext, request ocpp16.BootNotific
 			return
 		}
 
-		if request.CallError != nil {
+		if request.IsCallError() {
 			log.Printf("Received callerror: %s %+v\n", ctx.ChargePointID, request.CallError)
 			return
 		}
-		if request.CallResult != nil {
+		if request.IsCallResult() {
 			log.Printf("Received callresult: %s %+v\n", ctx.ChargePointID, request.CallResult)
 			return
 		}
