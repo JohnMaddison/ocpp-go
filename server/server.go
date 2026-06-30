@@ -8,17 +8,21 @@ import (
 
 	"github.com/JohnMaddison/ocpp-go"
 	"github.com/JohnMaddison/ocpp-go/ocpp16"
+	"github.com/JohnMaddison/ocpp-go/ocpp21"
 )
 
 type Server struct {
 	address         string
 	path            string
 	ocppCallbacks   ocpp16.OCPPCallbacks
+	ocpp21Callbacks ocpp21.OCPPCallbacks
 	socketCallbacks ocpp.SocketCallbacks
 	logTraffic      bool
 	logKeepalive    bool
 	parser          func(message []byte, ctx *ocpp16.OCPPContext) ([]byte, error)
 	subprotocols    []string
+	ocpp16Enabled   bool
+	ocpp21Enabled   bool
 	// Basic auth (optional)
 	basicAuthEnabled bool
 	basicUser        string
@@ -49,6 +53,7 @@ func NewServer(address string, opts ...Option) *Server {
 
 func ensureOCPP16Parser(s *Server) {
 	s.ocppCallbacks.InitHandlers()
+	s.ocpp16Enabled = true
 	if s.parser == nil {
 		s.parser = s.ocppCallbacks.ParseMessage
 	}
@@ -61,12 +66,25 @@ func WithOCPP16Callbacks(cb ocpp16.OCPPCallbacks) Option {
 		cb.InitHandlers()
 		s.ocppCallbacks = cb
 		s.parser = s.ocppCallbacks.ParseMessage
+		s.ocpp16Enabled = true
+	}
+}
+
+// WithOCPP21Callbacks sets OCPP 2.1 callbacks and uses its ParseMessage for ocpp2.1 connections.
+func WithOCPP21Callbacks(cb ocpp21.OCPPCallbacks) Option {
+	return func(s *Server) {
+		cb.InitHandlers()
+		s.ocpp21Callbacks = cb
+		s.ocpp21Enabled = true
 	}
 }
 
 // WithParser sets a custom message parse function.
 func WithParser(p func(message []byte, ctx *ocpp16.OCPPContext) ([]byte, error)) Option {
-	return func(s *Server) { s.parser = p }
+	return func(s *Server) {
+		s.parser = p
+		s.ocpp16Enabled = true
+	}
 }
 
 // WithSocketCallbacks sets socket lifecycle callbacks.
@@ -360,6 +378,19 @@ func WithSubprotocols(protocols ...string) Option {
 	return func(s *Server) { s.subprotocols = protocols }
 }
 
+func (s *Server) protocols() []string {
+	if len(s.subprotocols) > 0 {
+		return s.subprotocols
+	}
+	if s.ocpp16Enabled && s.ocpp21Enabled {
+		return []string{"ocpp1.6", "ocpp2.1"}
+	}
+	if s.ocpp21Enabled {
+		return []string{"ocpp2.1"}
+	}
+	return []string{"ocpp1.6"}
+}
+
 // WithWebsocketKeepalive configures periodic websocket pings and pong timeout.
 // A non-positive interval disables the keepalive.
 // When pongTimeout is zero or negative, a default of twice the interval is used.
@@ -394,6 +425,9 @@ func WithTLS(certFile, keyFile string) Option {
 // Serve starts the HTTP server using the configured path.
 func (s *Server) Serve() error {
 	// Ensure a parser is configured. If none provided, initialize OCPP 1.6 callbacks parser.
+	if !s.ocpp21Enabled {
+		s.ocpp16Enabled = true
+	}
 	s.ocppCallbacks.InitHandlers()
 	if s.parser == nil {
 

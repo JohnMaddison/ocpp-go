@@ -6,6 +6,7 @@ import (
 
 	"github.com/JohnMaddison/ocpp-go"
 	"github.com/JohnMaddison/ocpp-go/ocpp16"
+	"github.com/JohnMaddison/ocpp-go/ocpp21"
 	"github.com/google/uuid"
 )
 
@@ -13,8 +14,11 @@ type Client struct {
 	chargePointID   string
 	address         string
 	ocppCallbacks   ocpp16.OCPPCallbacks
+	ocpp21Callbacks ocpp21.OCPPCallbacks
 	socketCallbacks ocpp.SocketCallbacks
 	OCPPContext     *ocpp16.OCPPContext
+	OCPP21Context   *ocpp21.OCPPContext
+	subprotocol     string
 	logTraffic      bool
 	logKeepalive    bool
 	username        string
@@ -23,13 +27,25 @@ type Client struct {
 	pongTimeout     time.Duration
 }
 
-func NewClient(chargePointID, address string) *Client {
+func NewOCPP16Client(chargePointID, address string) *Client {
 	client := &Client{
 		chargePointID: chargePointID,
 		address:       address,
 		OCPPContext:   nil,
+		subprotocol:   "ocpp1.6",
 	}
 	client.ocppCallbacks.InitHandlers()
+	return client
+}
+
+func NewOCPP21Client(chargePointID, address string) *Client {
+	client := &Client{
+		chargePointID: chargePointID,
+		address:       address,
+		OCPP21Context: nil,
+		subprotocol:   "ocpp2.1",
+	}
+	client.ocpp21Callbacks.InitHandlers()
 	return client
 }
 
@@ -47,6 +63,13 @@ func (c *Client) WithKeepaliveLogging() *Client {
 
 func (c *Client) WithAddress(address string) *Client {
 	c.address = address
+	return c
+}
+
+func (c *Client) WithOCPP21Callbacks(callbacks ocpp21.OCPPCallbacks) *Client {
+	callbacks.InitHandlers()
+	c.ocpp21Callbacks = callbacks
+	c.subprotocol = "ocpp2.1"
 	return c
 }
 
@@ -269,7 +292,10 @@ func (c *Client) WithUpdateFirmwareHandler(callback ocpp16.UpdateFirmwareCallbac
 	return c
 }
 
-// SendCall sends a typed OCPP 1.6 call payload.
-func (c *Client) SendCall(action ocpp16.Action, payload any) (*ocpp16.ResultOrError, error) {
+func (c *Client) SendOCPP16Call(action ocpp16.Action, payload any) (*ocpp16.ResultOrError, error) {
 	return c.OCPPContext.Send(ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: uuid.New().String(), Action: string(action), Payload: payload})
+}
+
+func (c *Client) SendOCPP21Call(action ocpp21.Action, payload any) (*ocpp21.ResultOrError, error) {
+	return c.OCPP21Context.Send(ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: uuid.New().String(), Action: string(action), Payload: payload})
 }

@@ -48,7 +48,7 @@ func main() {
 
 	chargePointID := "CP_000001"
 	//Create client
-	cp := client.NewClient(chargePointID, "ws://127.0.0.1:9001/ocpp").
+	cp := client.NewOCPP16Client(chargePointID, "ws://127.0.0.1:9001/ocpp").
 		WithConfigurationHandler(getConfigurationHandler).
 		WithConnectedHandler(ConnectedHandler).
 		WithDisconnectHandler(DisconnectHandler).
@@ -73,7 +73,7 @@ func main() {
 
 	// Send bootnotification untill we get accepted
 	for true {
-		request, err := cp.SendCall(ocpp16.ActionBootNotification, ocpp16.BootNotificationRequest{ChargePointModel: model, ChargePointVendor: vendor})
+		request, err := cp.SendOCPP16Call(ocpp16.ActionBootNotification, ocpp16.BootNotificationRequest{ChargePointModel: model, ChargePointVendor: vendor})
 
 		if err != nil {
 			log.Printf("Failed to send bootnotification %s", err)
@@ -98,15 +98,15 @@ func main() {
 		}
 	}
 
-	cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: 0, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
-	cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: 1, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
-	cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: 2, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
+	cp.SendOCPP16Call(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: 0, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
+	cp.SendOCPP16Call(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: 1, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
+	cp.SendOCPP16Call(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: 2, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
 
 	chargingConnectorID := 1
-	cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: chargingConnectorID, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusPreparing})
+	cp.SendOCPP16Call(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: chargingConnectorID, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusPreparing})
 
 	tagIdentifier := "0000-0000-0001"
-	authorizeRequest, err := cp.SendCall(ocpp16.ActionAuthorize, ocpp16.AuthorizeRequest{IDTag: tagIdentifier})
+	authorizeRequest, err := cp.SendOCPP16Call(ocpp16.ActionAuthorize, ocpp16.AuthorizeRequest{IDTag: tagIdentifier})
 
 	if err != nil {
 		log.Printf("Failed to send authorize request %s", err)
@@ -123,7 +123,7 @@ func main() {
 			//Tag is valid
 
 			meterStart := 0
-			startTransactionRequest, err := cp.SendCall(ocpp16.ActionStartTransaction, ocpp16.StartTransactionRequest{ConnectorID: chargingConnectorID, IDTag: tagIdentifier, MeterStart: meterStart, Timestamp: time.Now()})
+			startTransactionRequest, err := cp.SendOCPP16Call(ocpp16.ActionStartTransaction, ocpp16.StartTransactionRequest{ConnectorID: chargingConnectorID, IDTag: tagIdentifier, MeterStart: meterStart, Timestamp: time.Now()})
 
 			if err != nil {
 				log.Printf("Failed to send startTransaction request %s", err)
@@ -136,7 +136,7 @@ func main() {
 
 				if startTransactionResponse.IDTagInfo.Status == ocpp16.AuthorizationStatusAccepted {
 
-					cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: chargingConnectorID, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusCharging})
+					cp.SendOCPP16Call(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: chargingConnectorID, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusCharging})
 
 					meterValuesTicker := time.NewTicker(5 * time.Second)
 					defer meterValuesTicker.Stop()
@@ -145,7 +145,7 @@ func main() {
 					for {
 						select {
 						case <-meterValuesTicker.C:
-							cp.SendCall(ocpp16.ActionMeterValues, ocpp16.MeterValuesRequest{
+							cp.SendOCPP16Call(ocpp16.ActionMeterValues, ocpp16.MeterValuesRequest{
 								ConnectorID:   chargingConnectorID,
 								TransactionID: &startTransactionResponse.TransactionID,
 								MeterValue: []ocpp16.MeterValue{
@@ -176,14 +176,14 @@ func main() {
 					}
 				}
 
-				_, err := cp.SendCall(ocpp16.ActionStopTransaction, ocpp16.StopTransactionRequest{IDTag: &tagIdentifier, MeterStop: meterStart, Timestamp: time.Now(), TransactionID: startTransactionResponse.TransactionID, Reason: ocpp.Ptr(ocpp16.ReasonEVDisconnected)})
+				_, err := cp.SendOCPP16Call(ocpp16.ActionStopTransaction, ocpp16.StopTransactionRequest{IDTag: &tagIdentifier, MeterStop: meterStart, Timestamp: time.Now(), TransactionID: startTransactionResponse.TransactionID, Reason: ocpp.Ptr(ocpp16.ReasonEVDisconnected)})
 
 				if err != nil {
 					log.Printf("Failed to send stopTransaction request %s", err)
 				}
 
-				cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: chargingConnectorID, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusFinishing})
-				cp.SendCall(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: chargingConnectorID, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
+				cp.SendOCPP16Call(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: chargingConnectorID, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusFinishing})
+				cp.SendOCPP16Call(ocpp16.ActionStatusNotification, ocpp16.StatusNotificationRequest{ConnectorID: chargingConnectorID, ErrorCode: ocpp16.ChargePointErrorCodeNoError, Status: ocpp16.ChargePointStatusAvailable})
 			}
 
 		}
@@ -196,7 +196,7 @@ func main() {
 	for {
 		select {
 		case <-heartbeatTicker.C:
-			cp.SendCall(ocpp16.ActionHeartbeat, ocpp16.EmptyPayload{})
+			cp.SendOCPP16Call(ocpp16.ActionHeartbeat, ocpp16.EmptyPayload{})
 
 		case <-ctx.Done():
 			log.Print("Shutdown complete")

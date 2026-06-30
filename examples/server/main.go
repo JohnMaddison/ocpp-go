@@ -85,7 +85,7 @@ func main() {
 }
 
 func ConnectHandler(ctx ocpp.ConnectRequest) bool {
-	log.Printf("Received connection from %s, Headers: %s", ctx.R.PathValue("cpid"), ctx.R.Header)
+	log.Printf("Allowed connection from %s, Headers: %s", ctx.R.PathValue("cpid"), ctx.R.Header)
 	return true
 }
 func ConnectedHandler(info ocpp.ConnectionInfo) {

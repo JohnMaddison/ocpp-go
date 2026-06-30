@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/JohnMaddison/ocpp-go"
-	"github.com/JohnMaddison/ocpp-go/ocpp16"
 	"github.com/gorilla/websocket"
 )
 
@@ -25,9 +24,16 @@ type Options struct {
 	LogKeepalive bool
 }
 
+type Runtime struct {
+	ChargePointID string
+	OutgoingCalls func(done <-chan struct{}) <-chan any
+	Parse         func(message []byte) ([]byte, error)
+	Serialize     func(call any) ([]byte, error)
+}
+
 // Run starts read/write pumps for a websocket OCPP connection.
 // It invokes socket callbacks for connect/disconnect lifecycle.
-func Run(conn *websocket.Conn, parse func(message []byte, ctx *ocpp16.OCPPContext) ([]byte, error), ctx *ocpp16.OCPPContext, socketCallbacks ocpp.SocketCallbacks, opts ...*Options) {
+func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallbacks, opts ...*Options) {
 	var opt *Options
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -63,7 +69,7 @@ func Run(conn *websocket.Conn, parse func(message []byte, ctx *ocpp16.OCPPContex
 	}
 	// Connected callback
 	connectionInfo := ocpp.ConnectionInfo{
-		ChargePointID: ctx.ChargePointID,
+		ChargePointID: runtime.ChargePointID,
 		RemoteAddr:    conn.RemoteAddr(),
 		LocalAddr:     conn.LocalAddr(),
 	}
@@ -73,6 +79,7 @@ func Run(conn *websocket.Conn, parse func(message []byte, ctx *ocpp16.OCPPContex
 
 	outgoingResponses := make(chan []byte, 10)
 	done := make(chan struct{})
+	outgoingCalls := runtime.OutgoingCalls(done)
 	var closeDone sync.Once
 	closeDoneFunc := func() { closeDone.Do(func() { close(done) }) }
 
@@ -101,7 +108,7 @@ func Run(conn *websocket.Conn, parse func(message []byte, ctx *ocpp16.OCPPContex
 					logf("failed to extend read deadline: %v", err)
 				}
 			}
-			response, err := parse(message, ctx)
+			response, err := runtime.Parse(message)
 			if err != nil {
 				log.Printf("parseMessage error: %s", err)
 				conn.Close()
@@ -147,12 +154,12 @@ func Run(conn *websocket.Conn, parse func(message []byte, ctx *ocpp16.OCPPContex
 				if opt != nil && opt.LogSent {
 					logf("sent: %s", string(response))
 				}
-			case message, ok := <-ctx.Queue:
+			case message, ok := <-outgoingCalls:
 				if !ok {
 					return
 				}
 
-				payload, serializeErr := message.Call.SerializeOCPP()
+				payload, serializeErr := runtime.Serialize(message)
 				if serializeErr != nil {
 					log.Printf("serialize error: %s", serializeErr)
 					return
