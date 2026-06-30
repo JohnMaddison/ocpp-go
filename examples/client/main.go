@@ -168,6 +168,10 @@ func main() {
 
 							meterStart = meterStart + 10
 
+							if meterStart > 40 {
+								break Outer
+							}
+
 						case <-ctx.Done():
 							log.Println("Stopping MeterValues loop")
 							break Outer
