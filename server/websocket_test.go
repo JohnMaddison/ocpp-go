@@ -15,13 +15,15 @@ import (
 func TestWshandler_BootNotification(t *testing.T) {
 
 	var calledConnected bool
+	var connectedChargePointID string
 	var calledBootNotification bool
 
 	server := &Server{
 		socketCallbacks: ocpp.SocketCallbacks{
-			Connected: func() {
+			Connected: func(info ocpp.ConnectionInfo) {
 				t.Log("Connected callback triggered")
 				calledConnected = true
+				connectedChargePointID = info.ChargePointID
 			},
 		},
 		ocppCallbacks: ocpp16.OCPPCallbacks{
@@ -83,5 +85,6 @@ func TestWshandler_BootNotification(t *testing.T) {
 
 	// ✅ Assert that the callbacks were called
 	assert.True(t, calledConnected, "Connected callback should be called")
+	assert.Equal(t, "CP123", connectedChargePointID)
 	assert.True(t, calledBootNotification, "BootNotification callback should be called")
 }

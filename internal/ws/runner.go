@@ -62,8 +62,13 @@ func Run(conn *websocket.Conn, parse func(message []byte, ctx *ocpp16.OCPPContex
 		})
 	}
 	// Connected callback
+	connectionInfo := ocpp.ConnectionInfo{
+		ChargePointID: ctx.ChargePointID,
+		RemoteAddr:    conn.RemoteAddr(),
+		LocalAddr:     conn.LocalAddr(),
+	}
 	if socketCallbacks.Connected != nil {
-		socketCallbacks.Connected()
+		socketCallbacks.Connected(connectionInfo)
 	}
 
 	outgoingResponses := make(chan []byte, 10)
@@ -188,6 +193,6 @@ func Run(conn *websocket.Conn, parse func(message []byte, ctx *ocpp16.OCPPContex
 
 	// Disconnected callback
 	if socketCallbacks.Disconnect != nil {
-		socketCallbacks.Disconnect()
+		socketCallbacks.Disconnect(connectionInfo)
 	}
 }

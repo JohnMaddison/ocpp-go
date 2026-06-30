@@ -88,14 +88,12 @@ func ConnectHandler(ctx ocpp.ConnectRequest) bool {
 	log.Printf("Received connection from %s, Headers: %s", ctx.R.PathValue("cpid"), ctx.R.Header)
 	return true
 }
-func ConnectedHandler() {
-	//TODO ADD ARGUMENTS
-	log.Printf("Connected")
+func ConnectedHandler(info ocpp.ConnectionInfo) {
+	log.Printf("Connected: %s", info.ChargePointID)
 }
 
-func DisconnectHandler() {
-	//TODO ADD ARGUMENTS
-	log.Printf("Disconnected")
+func DisconnectHandler(info ocpp.ConnectionInfo) {
+	log.Printf("Disconnected: %s", info.ChargePointID)
 }
 
 func bootNotificationHandler(ctx *ocpp16.OCPPContext, request ocpp16.BootNotificationRequest) (*ocpp16.BootNotificationResponse, *ocpp16.OCPPError) {

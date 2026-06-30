@@ -206,14 +206,12 @@ func main() {
 
 }
 
-func ConnectedHandler() {
-	//TODO ADD ARGUMENTS
-	log.Printf("Connected")
+func ConnectedHandler(info ocpp.ConnectionInfo) {
+	log.Printf("Connected: %s", info.ChargePointID)
 }
 
-func DisconnectHandler() {
-	//TODO ADD ARGUMENTS
-	log.Printf("Disconnected")
+func DisconnectHandler(info ocpp.ConnectionInfo) {
+	log.Printf("Disconnected: %s", info.ChargePointID)
 }
 
 func getConfigurationHandler(ctx *ocpp16.OCPPContext, request ocpp16.GetConfigurationRequest) (*ocpp16.GetConfigurationResponse, *ocpp16.OCPPError) {
