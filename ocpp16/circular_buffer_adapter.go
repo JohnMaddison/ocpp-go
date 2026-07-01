@@ -22,22 +22,12 @@ func (cb *CircularBuffer) Add(item Request) {
 
 // FindByMessageID searches for an item by message ID and returns it along with a boolean indicating if found.
 func (cb *CircularBuffer) FindByMessageID(messageID string) (Request, bool) {
-	idx := cb.buf.FindIndex(func(r Request) bool { return r.Call.MessageID == messageID })
-	if idx < 0 {
-		return Request{}, false
-	}
-	// We don't expose random access; reuse GetAll for simplicity (small sizes)
-	all := cb.buf.GetAll()
-	return all[idx], true
+	return cb.buf.Find(func(r Request) bool { return r.Call.MessageID == messageID })
 }
 
 // RemoveByMessageID removes an item by message ID and returns it along with a boolean indicating if found.
 func (cb *CircularBuffer) RemoveByMessageID(messageID string) (Request, bool) {
-	idx := cb.buf.FindIndex(func(r Request) bool { return r.Call.MessageID == messageID })
-	if idx < 0 {
-		return Request{}, false
-	}
-	return cb.buf.RemoveAt(idx)
+	return cb.buf.RemoveWhere(func(r Request) bool { return r.Call.MessageID == messageID })
 }
 
 // Size returns the current number of items in the buffer.

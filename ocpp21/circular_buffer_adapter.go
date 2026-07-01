@@ -15,20 +15,11 @@ func (cb *CircularBuffer) Add(item Request) {
 }
 
 func (cb *CircularBuffer) FindByMessageID(messageID string) (Request, bool) {
-	idx := cb.buf.FindIndex(func(r Request) bool { return r.Call.MessageID == messageID })
-	if idx < 0 {
-		return Request{}, false
-	}
-	all := cb.buf.GetAll()
-	return all[idx], true
+	return cb.buf.Find(func(r Request) bool { return r.Call.MessageID == messageID })
 }
 
 func (cb *CircularBuffer) RemoveByMessageID(messageID string) (Request, bool) {
-	idx := cb.buf.FindIndex(func(r Request) bool { return r.Call.MessageID == messageID })
-	if idx < 0 {
-		return Request{}, false
-	}
-	return cb.buf.RemoveAt(idx)
+	return cb.buf.RemoveWhere(func(r Request) bool { return r.Call.MessageID == messageID })
 }
 
 func (cb *CircularBuffer) Size() int { return cb.buf.Size() }

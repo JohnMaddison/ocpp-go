@@ -116,12 +116,50 @@ func (cb *CircularBuffer[T]) FindIndex(pred func(T) bool) int {
 	return -1
 }
 
+// Find returns the first item matching pred.
+func (cb *CircularBuffer[T]) Find(pred func(T) bool) (item T, ok bool) {
+	cb.mutex.RLock()
+	defer cb.mutex.RUnlock()
+	if cb.size == 0 {
+		return item, false
+	}
+	current := cb.head
+	for i := 0; i < cb.size; i++ {
+		if pred(cb.buffer[current]) {
+			return cb.buffer[current], true
+		}
+		current = (current + 1) % cb.capacity
+	}
+	return item, false
+}
+
 // RemoveAt removes the item at logical index (0..size-1) and returns it.
 // Returns ok=false when index is out of range.
 func (cb *CircularBuffer[T]) RemoveAt(index int) (item T, ok bool) {
 	cb.mutex.Lock()
 	defer cb.mutex.Unlock()
 
+	return cb.removeAtLocked(index)
+}
+
+// RemoveWhere removes the first item matching pred and returns it.
+func (cb *CircularBuffer[T]) RemoveWhere(pred func(T) bool) (item T, ok bool) {
+	cb.mutex.Lock()
+	defer cb.mutex.Unlock()
+	if cb.size == 0 {
+		return item, false
+	}
+	current := cb.head
+	for i := 0; i < cb.size; i++ {
+		if pred(cb.buffer[current]) {
+			return cb.removeAtLocked(i)
+		}
+		current = (current + 1) % cb.capacity
+	}
+	return item, false
+}
+
+func (cb *CircularBuffer[T]) removeAtLocked(index int) (item T, ok bool) {
 	if index < 0 || index >= cb.size {
 		return item, false
 	}
