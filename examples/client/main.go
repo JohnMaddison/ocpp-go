@@ -16,7 +16,6 @@ import (
 	"github.com/johnmaddison/ocpp-go/ocpp16"
 )
 
-// var debug = flag.Bool("debug", false, "enable debug logging")
 var profiler = flag.Bool("profile", false, "enable profiler")
 
 var model = "Simulator"
@@ -25,7 +24,6 @@ var vendor = "OCPP-GO"
 func main() {
 	flag.Parse()
 
-	// Handle graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -35,7 +33,6 @@ func main() {
 	go func() {
 		<-sigChan
 		log.Print("Received interrupt signal, shutting down gracefully...")
-		// Cancel context to signal shutdown
 		cancel()
 	}()
 
@@ -47,7 +44,6 @@ func main() {
 	}
 
 	chargePointID := "CP_000001"
-	//Create client
 	cp := client.New16(chargePointID, "ws://127.0.0.1:9001/ocpp").
 		With16GetConfigurationHandler(getConfigurationHandler).
 		WithConnectedHandler(ConnectedHandler).
@@ -56,9 +52,7 @@ func main() {
 		WithKeepaliveLogging().
 		WithTrafficLogging()
 
-	// Loop websocket connect untill we succedd
-	for true {
-
+	for {
 		err := cp.Connect()
 		if err != nil {
 			log.Printf("Failed to connect to server %v", err)
@@ -66,13 +60,11 @@ func main() {
 		} else {
 			break
 		}
-
 	}
 
 	bootNotificationResponseInterval := 10
 
-	// Send bootnotification untill we get accepted
-	for true {
+	for {
 		request, err := cp.Send16Call(ocpp16.ActionBootNotification, ocpp16.BootNotificationRequest{ChargePointModel: model, ChargePointVendor: vendor})
 
 		if err != nil {
@@ -120,8 +112,6 @@ func main() {
 		authorizeResponse, _ := authorizeRequest.GetPayload().(ocpp16.AuthorizeResponse)
 
 		if authorizeResponse.IDTagInfo.Status == ocpp16.AuthorizationStatusAccepted {
-			//Tag is valid
-
 			meterStart := 0
 			startTransactionRequest, err := cp.Send16Call(ocpp16.ActionStartTransaction, ocpp16.StartTransactionRequest{ConnectorID: chargingConnectorID, IDTag: tagIdentifier, MeterStart: meterStart, Timestamp: time.Now()})
 

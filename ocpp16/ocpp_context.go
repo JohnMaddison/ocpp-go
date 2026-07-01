@@ -16,46 +16,53 @@ type Context struct {
 	messageIDGenerator uuidgenerator.MessageIDGeneratorMethod
 }
 
-func NewContext(ChargePointID string) *Context {
-	return NewContextWithMessageIDGenerator(ChargePointID, nil)
+// NewContext creates an OCPP 1.6 context using the default message ID generator.
+func NewContext(chargePointID string) *Context {
+	return NewContextWithMessageIDGenerator(chargePointID, nil)
 }
 
-func NewContextWithMessageIDGenerator(ChargePointID string, generator func() string) *Context {
+// NewContextWithMessageIDGenerator creates an OCPP 1.6 context with a custom message ID generator.
+func NewContextWithMessageIDGenerator(chargePointID string, generator func() string) *Context {
 	capacity := 10
 	if generator == nil {
 		generator = uuidgenerator.DefaultUUIDGenerator
 	}
 	return &Context{
-		ChargePointID:      ChargePointID,
+		ChargePointID:      chargePointID,
 		Queue:              make(chan Request, capacity),
 		storage:            NewCircularBuffer(capacity),
 		messageIDGenerator: generator,
 	}
 }
 
+// ResultOrError contains either a CALLRESULT or CALLERROR response.
 type ResultOrError struct {
 	CallResult *ocpp.CallResult
 	CallError  *ocpp.CallError
 }
 
+// IsCallError reports whether the response is a CALLERROR.
 func (s ResultOrError) IsCallError() bool {
 	return s.CallError != nil
 }
 
+// IsCallResult reports whether the response is a CALLRESULT.
 func (s ResultOrError) IsCallResult() bool {
 	return s.CallResult != nil
 }
 
+// GetPayload returns the CALLRESULT payload.
 func (s ResultOrError) GetPayload() any {
 	return s.CallResult.Payload
 }
 
+// Request tracks an outbound CALL and its eventual response.
 type Request struct {
 	Call   ocpp.Call
 	result chan ResultOrError
 }
 
-// Send sends a call with a default 10-second timeout
+// Send sends a CALL with a default 10-second timeout.
 func (s *Context) Send(call ocpp.Call) (*ResultOrError, error) {
 	return s.SendWithTimeout(call, 10*time.Second)
 }
@@ -65,7 +72,7 @@ func (s *Context) SendCall(action Action, payload any) (*ResultOrError, error) {
 	return s.Send(ocpp.Call{MessageType: ocpp.MessageTypeCall, Action: string(action), Payload: payload})
 }
 
-// SendWithTimeout sends a call with a custom timeout
+// SendWithTimeout sends a CALL with a custom timeout.
 func (s *Context) SendWithTimeout(call ocpp.Call, timeout time.Duration) (*ResultOrError, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -77,26 +84,23 @@ func (s *Context) SendCallWithContext(ctx context.Context, action Action, payloa
 	return s.SendWithContext(ctx, ocpp.Call{MessageType: ocpp.MessageTypeCall, Action: string(action), Payload: payload})
 }
 
-// SendWithContext sends a call with context for cancellation
+// SendWithContext sends a CALL and waits until a response arrives or ctx is canceled.
 func (s *Context) SendWithContext(ctx context.Context, call ocpp.Call) (*ResultOrError, error) {
 	if call.MessageID == "" {
 		call.MessageID = s.messageIDGenerator()
 	}
 	msg := Request{
 		Call:   call,
-		result: make(chan ResultOrError, 1), // Buffered to prevent goroutine leaks
+		result: make(chan ResultOrError, 1),
 	}
 
 	s.storage.Add(msg)
-	// Non-blocking send to queue with context
 	select {
 	case s.Queue <- msg:
-		// Successfully queued
 	case <-ctx.Done():
 		return nil, fmt.Errorf("failed to queue call %s: %w", call.MessageID, ctx.Err())
 	}
 
-	// Wait for result
 	select {
 	case result := <-msg.result:
 		return &result, nil
@@ -105,6 +109,7 @@ func (s *Context) SendWithContext(ctx context.Context, call ocpp.Call) (*ResultO
 	}
 }
 
+// SendCallAndExpectResult sends a CALL and returns only a successful CALLRESULT.
 func (s *Context) SendCallAndExpectResult(action string, payload any) (*ocpp.CallResult, error) {
 	call := &ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: s.messageIDGenerator(), Action: action, Payload: payload}
 	request, err := s.Send(*call)

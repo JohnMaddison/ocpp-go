@@ -43,7 +43,6 @@ func TestWshandler_BootNotification(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ws/{cpid}", func(w http.ResponseWriter, r *http.Request) {
-		// Inject path value for testing since r.PathValue doesn't work outside chi/router
 		r.SetPathValue("cpid", "CP123")
 		server.wshandler(w, r)
 	})
@@ -51,7 +50,6 @@ func TestWshandler_BootNotification(t *testing.T) {
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
 
-	// Convert HTTP URL to WebSocket URL
 	wsURL := "ws" + testServer.URL[4:] + "/ws/CP123"
 	header := http.Header{}
 	header.Add("Sec-WebSocket-Protocol", "ocpp1.6")
@@ -61,7 +59,6 @@ func TestWshandler_BootNotification(t *testing.T) {
 	assert.Equal(t, http.StatusSwitchingProtocols, resp.StatusCode)
 	defer conn.Close()
 
-	// Send a BootNotification message
 	msg := []any{
 		2,
 		"abc123",
@@ -78,13 +75,12 @@ func TestWshandler_BootNotification(t *testing.T) {
 	err = conn.ReadJSON(&response)
 	assert.NoError(t, err)
 
-	assert.Equal(t, float64(3), response[0]) // MessageTypeCallResult
-	assert.Equal(t, "abc123", response[1])   // MessageID
+	assert.Equal(t, float64(3), response[0])
+	assert.Equal(t, "abc123", response[1])
 	payload, ok := response[2].(map[string]any)
 	assert.True(t, ok)
 	assert.Equal(t, "Accepted", payload["status"])
 
-	// ✅ Assert that the callbacks were called
 	assert.True(t, calledConnected, "Connected callback should be called")
 	assert.Equal(t, "CP123", connectedChargePointID)
 	assert.True(t, calledBootNotification, "BootNotification callback should be called")

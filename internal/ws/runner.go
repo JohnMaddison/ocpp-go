@@ -26,6 +26,7 @@ type Options struct {
 	ReadLimit int64
 }
 
+// Runtime provides protocol-specific behavior for a websocket connection.
 type Runtime struct {
 	ChargePointID string
 	OutgoingCalls func(done <-chan struct{}) <-chan any
@@ -72,7 +73,6 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 	if opt != nil && opt.ReadLimit > 0 {
 		conn.SetReadLimit(opt.ReadLimit)
 	}
-	// Connected callback
 	connectionInfo := ocpp.ConnectionInfo{
 		ChargePointID: runtime.ChargePointID,
 		RemoteAddr:    conn.RemoteAddr(),
@@ -91,7 +91,6 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	// Read goroutine
 	go func() {
 		defer wg.Done()
 		defer closeDoneFunc()
@@ -131,7 +130,6 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 		}
 	}()
 
-	// Write goroutine
 	go func() {
 		defer wg.Done()
 		defer close(outgoingResponses)
@@ -200,10 +198,8 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 		}
 	}()
 
-	// Wait until both pumps stop
 	wg.Wait()
 
-	// Disconnected callback
 	if socketCallbacks.Disconnect != nil {
 		socketCallbacks.Disconnect(connectionInfo)
 	}

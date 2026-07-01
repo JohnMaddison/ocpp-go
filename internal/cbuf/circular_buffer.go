@@ -34,7 +34,6 @@ func (cb *CircularBuffer[T]) Add(item T) {
 	cb.tail = (cb.tail + 1) % cb.capacity
 
 	if cb.full {
-		// Buffer is full, move head forward (overwrite oldest)
 		cb.head = (cb.head + 1) % cb.capacity
 	} else {
 		cb.size++
@@ -164,11 +163,9 @@ func (cb *CircularBuffer[T]) removeAtLocked(index int) (item T, ok bool) {
 		return item, false
 	}
 
-	// Convert logical index to physical index
 	phys := (cb.head + index) % cb.capacity
 	item = cb.buffer[phys]
 
-	// Shift items after phys backward
 	cur := phys
 	for j := 0; j < cb.size-1-index; j++ {
 		next := (cur + 1) % cb.capacity
@@ -176,7 +173,6 @@ func (cb *CircularBuffer[T]) removeAtLocked(index int) (item T, ok bool) {
 		cur = next
 	}
 
-	// Clear last slot and adjust tail/size
 	var zero T
 	cb.tail = (cb.tail - 1 + cb.capacity) % cb.capacity
 	cb.buffer[cb.tail] = zero

@@ -17,7 +17,6 @@ import (
 	"github.com/johnmaddison/ocpp-go/server"
 )
 
-// var debug = flag.Bool("debug", false, "enable debug logging")
 var profiler = flag.Bool("profile", false, "enable profiler")
 var addr = flag.String("addr", "0.0.0.0:9001", "listen address in host:port form")
 var tlsCert = flag.String("tls-cert", "", "path to TLS certificate file (enables TLS when set)")
@@ -29,7 +28,6 @@ func main() {
 
 	flag.Parse()
 
-	// Handle graceful shutdown
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -133,15 +131,12 @@ func bootNotificationHandler(ctx *ocpp16.Context, request ocpp16.BootNotificatio
 }
 
 func heartbeatHandler(ctx *ocpp16.Context, request ocpp16.HeartbeatRequest) (*ocpp16.HeartbeatResponse, *ocpp16.Error) {
-	//log.Printf("Heartbeat received from charge point: %s %+v\n", ctx.ChargePointID, request)
-
 	return &ocpp16.HeartbeatResponse{
 		CurrentTime: time.Now().UTC(),
 	}, nil
 }
 
 func statusNotificationHandler(ctx *ocpp16.Context, request ocpp16.StatusNotificationRequest) (*ocpp16.StatusNotificationResponse, *ocpp16.Error) {
-	//log.Printf("StatusNotification received from charge point: %s %+v\n", ctx.ChargePointID, request)
 	return &ocpp16.StatusNotificationResponse{}, nil
 }
 

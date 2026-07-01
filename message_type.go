@@ -8,7 +8,7 @@ import (
 	"github.com/johnmaddison/ocpp-go/internal/uuidgenerator"
 )
 
-// MessageType constants define the type of the OCPP message.
+// MessageType constants identify the OCPP JSON array envelope type.
 const (
 	MessageTypeCall       = 2
 	MessageTypeCallResult = 3
@@ -34,6 +34,7 @@ func (c *Call) SerializeOCPP() ([]byte, error) {
 	return json.Marshal(message)
 }
 
+// NewCall creates a CALL with a generated message ID.
 func NewCall(action string, payload any) *Call {
 	return &Call{MessageType: MessageTypeCall, MessageID: uuidgenerator.DefaultUUIDGenerator(), Action: action, Payload: payload}
 }
@@ -80,9 +81,8 @@ func (ce *CallError) SerializeOCPP() ([]byte, error) {
 	return json.Marshal(message)
 }
 
-// Implement Stringer
+// String returns the JSON representation of the OCPP error fields.
 func (c CallError) String() string {
-	// Marshal only the exported JSON fields
 	data, err := json.Marshal(c)
 	if err != nil {
 		return fmt.Sprintf("CallError{ErrorCode:%q, ErrorDescription:%q, ErrorDetails:%v}",

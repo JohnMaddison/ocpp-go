@@ -26,30 +26,27 @@ const (
 )
 
 type Server struct {
-	mu               sync.Mutex
-	address          string
-	path             string
-	httpServer       *http.Server
-	activeWebsockets map[*websocket.Conn]struct{}
-	sessions         map[string]*Session
-	ocppCallbacks    ocpp16.Callbacks
-	ocpp21Callbacks  ocpp21.Callbacks
-	socketCallbacks  ocpp.SocketCallbacks
-	logTraffic       bool
-	logKeepalive     bool
-	parser           func(message []byte, ctx *ocpp16.Context) ([]byte, error)
-	subprotocols     []string
-	ocpp16Enabled    bool
-	ocpp21Enabled    bool
-	// Basic auth (optional)
-	basicAuthEnabled bool
-	basicUser        string
-	basicPass        string
-	// TLS (optional)
-	tlsEnabled bool
-	tlsCert    string
-	tlsKey     string
-	// Websocket keepalive options
+	mu                   sync.Mutex
+	address              string
+	path                 string
+	httpServer           *http.Server
+	activeWebsockets     map[*websocket.Conn]struct{}
+	sessions             map[string]*Session
+	ocppCallbacks        ocpp16.Callbacks
+	ocpp21Callbacks      ocpp21.Callbacks
+	socketCallbacks      ocpp.SocketCallbacks
+	logTraffic           bool
+	logKeepalive         bool
+	parser               func(message []byte, ctx *ocpp16.Context) ([]byte, error)
+	subprotocols         []string
+	ocpp16Enabled        bool
+	ocpp21Enabled        bool
+	basicAuthEnabled     bool
+	basicUser            string
+	basicPass            string
+	tlsEnabled           bool
+	tlsCert              string
+	tlsKey               string
 	pingInterval         time.Duration
 	pongTimeout          time.Duration
 	websocketReadLimit   int64
@@ -98,7 +95,6 @@ func ensure16Parser(s *Server) {
 // With16Callbacks sets OCPP 1.6 callbacks and uses its ParseMessage.
 func With16Callbacks(cb ocpp16.Callbacks) Option {
 	return func(s *Server) {
-		// Ensure callback handlers are initialized so ParseMessage can route actions
 		cb.InitHandlers()
 		s.ocppCallbacks = cb
 		s.parser = s.ocppCallbacks.ParseMessage
@@ -106,7 +102,7 @@ func With16Callbacks(cb ocpp16.Callbacks) Option {
 	}
 }
 
-// With21Callbacks sets OCPP 2.1 callbacks and uses its ParseMessage for ocpp2.1 connections.
+// With21Callbacks sets OCPP 2.1 callbacks for ocpp2.1 connections.
 func With21Callbacks(cb ocpp21.Callbacks) Option {
 	return func(s *Server) {
 		cb.InitHandlers()
@@ -128,14 +124,17 @@ func WithSocketCallbacks(cb ocpp.SocketCallbacks) Option {
 	return func(s *Server) { s.socketCallbacks = cb }
 }
 
+// WithConnectRequestHandler sets a callback for accepting or rejecting upgrade requests.
 func WithConnectRequestHandler(callback ocpp.ConnectRequestCallback) Option {
 	return func(s *Server) { s.socketCallbacks.ConnectRequest = callback }
 }
 
+// WithConnectedHandler sets a callback for established websocket connections.
 func WithConnectedHandler(callback ocpp.ConnectedCallback) Option {
 	return func(s *Server) { s.socketCallbacks.Connected = callback }
 }
 
+// WithDisconnectHandler sets a callback for closed websocket connections.
 func WithDisconnectHandler(callback ocpp.DisconnectCallback) Option {
 	return func(s *Server) { s.socketCallbacks.Disconnect = callback }
 }
@@ -208,6 +207,7 @@ func WithWebsocketCompression(enabled bool) Option {
 // WithKeepaliveLogging enables logging of websocket ping/pong frames.
 func WithKeepaliveLogging() Option { return func(s *Server) { s.logKeepalive = true } }
 
+// WithMessageIDGenerator sets the generator used for outbound CALL message IDs.
 func WithMessageIDGenerator(f func() string) Option {
 	return func(s *Server) {
 		if f != nil {
@@ -236,7 +236,6 @@ func WithTLS(certFile, keyFile string) Option {
 
 // Serve starts the HTTP server using the configured path.
 func (s *Server) Serve() error {
-	// Ensure a parser is configured. If none provided, initialize OCPP 1.6 callbacks parser.
 	if !s.ocpp21Enabled {
 		s.ocpp16Enabled = true
 	}

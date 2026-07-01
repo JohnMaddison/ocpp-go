@@ -20,12 +20,12 @@ func (cb *CircularBuffer) Add(item Request) {
 	cb.buf.Add(item)
 }
 
-// FindByMessageID searches for an item by message ID and returns it along with a boolean indicating if found.
+// FindByMessageID searches for an item by message ID.
 func (cb *CircularBuffer) FindByMessageID(messageID string) (Request, bool) {
 	return cb.buf.Find(func(r Request) bool { return r.Call.MessageID == messageID })
 }
 
-// RemoveByMessageID removes an item by message ID and returns it along with a boolean indicating if found.
+// RemoveByMessageID removes an item by message ID.
 func (cb *CircularBuffer) RemoveByMessageID(messageID string) (Request, bool) {
 	return cb.buf.RemoveWhere(func(r Request) bool { return r.Call.MessageID == messageID })
 }
@@ -42,5 +42,5 @@ func (cb *CircularBuffer) IsEmpty() bool { return cb.buf.IsEmpty() }
 // Clear removes all items from the buffer.
 func (cb *CircularBuffer) Clear() { cb.buf.Clear() }
 
-// GetAll returns a copy of all items in the buffer (from oldest to newest).
+// GetAll returns a copy of all items in the buffer, from oldest to newest.
 func (cb *CircularBuffer) GetAll() []Request { return cb.buf.GetAll() }

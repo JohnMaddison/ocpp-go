@@ -12,11 +12,10 @@ import (
 	"github.com/johnmaddison/ocpp-go/ocpp21"
 )
 
+// Connect opens the websocket connection and starts the read/write pumps.
 func (c *Client) Connect() error {
-	// WebSocket server URL (from client configuration)
 	url := c.address + "/" + c.chargePointID
 
-	// Optional Basic Auth
 	headers := http.Header{}
 	if c.username != "" || c.password != "" {
 		auth := c.username + ":" + c.password
@@ -24,12 +23,10 @@ func (c *Client) Connect() error {
 		headers.Add("Authorization", authHeader)
 	}
 
-	// Create a dialer with supported subprotocols
 	dialer := websocket.Dialer{
 		Subprotocols: []string{c.subprotocol}, EnableCompression: true, ReadBufferSize: 2048, WriteBufferSize: 2048, HandshakeTimeout: 10 * time.Second,
 	}
 
-	// Connect
 	conn, resp, err := dialer.Dial(url, headers)
 	if err != nil {
 		if resp != nil {
@@ -43,7 +40,6 @@ func (c *Client) Connect() error {
 		return err
 	}
 
-	// Use common runner with optional traffic logging and keepalive settings
 	go ws.Run(conn, runtime, c.socketCallbacks, &ws.Options{
 		LogSent:      c.logTraffic,
 		LogKeepalive: c.logKeepalive,

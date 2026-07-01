@@ -16,7 +16,6 @@ import (
 func (o *Server) wshandler(w http.ResponseWriter, r *http.Request) {
 	cpid := r.PathValue("cpid")
 
-	// Optional Basic Auth check
 	if o.basicAuthEnabled {
 		user, pass, ok := r.BasicAuth()
 		if !ok || user != o.basicUser || pass != o.basicPass {
@@ -26,7 +25,6 @@ func (o *Server) wshandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Allow/deny via user-defined callback if provided
 	if o.socketCallbacks.ConnectRequest != nil && !o.socketCallbacks.ConnectRequest(ocpp.ConnectRequest{R: r, W: &w}) {
 		return
 	}
@@ -61,7 +59,6 @@ func (o *Server) wshandler(w http.ResponseWriter, r *http.Request) {
 	o.registerSession(session)
 	defer o.unregisterSession(session)
 
-	// Use common runner with optional traffic logging and keepalive settings
 	ws.Run(c, runtime, o.socketCallbacks, &ws.Options{
 		LogSent:      o.logTraffic,
 		LogKeepalive: o.logKeepalive,

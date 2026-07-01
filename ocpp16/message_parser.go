@@ -12,13 +12,11 @@ import (
 type rawMessage []any
 
 func (o *Callbacks) ParseMessage(message []byte, ctx *Context) ([]byte, error) {
-	// Parse the OCPP message using standard JSON
 	var ocppMessage rawMessage
 	if err := json.Unmarshal(message, &ocppMessage); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal OCPP message: %w", err)
 	}
 
-	// Validate message structure
 	if len(ocppMessage) < 3 {
 		return nil, fmt.Errorf("invalid OCPP message format")
 	}
@@ -31,7 +29,6 @@ func (o *Callbacks) ParseMessage(message []byte, ctx *Context) ([]byte, error) {
 		o.InitHandlers()
 	}
 
-	// Handle CALL messages (type 2)
 	if int(messageType) == ocpp.MessageTypeCall {
 		if len(ocppMessage) != 4 {
 			return nil, fmt.Errorf("invalid CALL message format")
@@ -59,7 +56,6 @@ func (o *Callbacks) ParseMessage(message []byte, ctx *Context) ([]byte, error) {
 		}
 	}
 
-	// Handle CALLRESULT messages (type 3)
 	if int(messageType) == ocpp.MessageTypeCallResult {
 		if len(ocppMessage) != 3 {
 			return nil, fmt.Errorf("invalid CALLRESULT message format")
@@ -89,7 +85,6 @@ func (o *Callbacks) ParseMessage(message []byte, ctx *Context) ([]byte, error) {
 		return nil, nil
 	}
 
-	// Handle CALLERROR messages (type 4)
 	if int(messageType) == ocpp.MessageTypeCallError {
 		if len(ocppMessage) < 4 || len(ocppMessage) > 5 {
 			return nil, fmt.Errorf("invalid CALLERROR message format")
