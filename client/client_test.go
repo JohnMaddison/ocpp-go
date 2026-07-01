@@ -68,12 +68,12 @@ func TestOCPP21ClientCallbacksUseOCPP21Types(t *testing.T) {
 	}
 }
 
-func TestWithConfigurationHandlerRoutesIncomingCall(t *testing.T) {
+func TestWithOCPP16GetConfigurationHandlerRoutesIncomingCall(t *testing.T) {
 	const value = "Simulator"
 	called := false
 
 	c := NewOCPP16Client("CP_1", "ws://127.0.0.1:9001/ocpp").
-		WithConfigurationHandler(func(ctx *ocpp16.OCPPContext, request ocpp16.GetConfigurationRequest) (*ocpp16.GetConfigurationResponse, *ocpp16.OCPPError) {
+		WithOCPP16GetConfigurationHandler(func(ctx *ocpp16.OCPPContext, request ocpp16.GetConfigurationRequest) (*ocpp16.GetConfigurationResponse, *ocpp16.OCPPError) {
 			called = true
 			if ctx.ChargePointID != "CP_1" {
 				t.Fatalf("expected charge point ID CP_1, got %s", ctx.ChargePointID)
@@ -105,6 +105,38 @@ func TestWithConfigurationHandlerRoutesIncomingCall(t *testing.T) {
 	first := keys[0].(map[string]any)
 	if first["value"].(string) != value {
 		t.Fatalf("expected configuration value %q, got %v", value, first["value"])
+	}
+}
+
+func TestWithOCPP21BootNotificationHandlerRoutesIncomingCall(t *testing.T) {
+	called := false
+	c := NewOCPP21Client("CP_1", "ws://127.0.0.1:9001/ocpp").
+		WithOCPP21BootNotificationHandler(func(ctx *ocpp21.OCPPContext, request ocpp21.BootNotificationRequest) (*ocpp21.BootNotificationResponse, *ocpp21.OCPPError) {
+			called = true
+			if ctx.ChargePointID != "CP_1" {
+				t.Fatalf("expected charge point ID CP_1, got %s", ctx.ChargePointID)
+			}
+			return &ocpp21.BootNotificationResponse{
+				CurrentTime: time.Now(),
+				Interval:    30,
+				Status:      ocpp21.RegistrationStatusEnumAccepted,
+			}, nil
+		})
+
+	response, err := c.ocpp21Callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification",{}]`), ocpp21.NewOCPPContext("CP_1"))
+	if err != nil {
+		t.Fatalf("ParseMessage returned error: %v", err)
+	}
+	if !called {
+		t.Fatal("expected OCPP 2.1 boot notification handler to be called")
+	}
+
+	frame := decodeFrame(t, response)
+	if frame[0].(float64) != 3 {
+		t.Fatalf("expected CALLRESULT message type, got %v", frame[0])
+	}
+	if c.subprotocol != "ocpp2.1" {
+		t.Fatalf("expected ocpp2.1 subprotocol, got %s", c.subprotocol)
 	}
 }
 

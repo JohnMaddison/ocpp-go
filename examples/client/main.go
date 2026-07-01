@@ -49,7 +49,7 @@ func main() {
 	chargePointID := "CP_000001"
 	//Create client
 	cp := client.NewOCPP16Client(chargePointID, "ws://127.0.0.1:9001/ocpp").
-		WithConfigurationHandler(getConfigurationHandler).
+		WithOCPP16GetConfigurationHandler(getConfigurationHandler).
 		WithConnectedHandler(ConnectedHandler).
 		WithDisconnectHandler(DisconnectHandler).
 		WithWebsocketKeepalive(30*time.Second, 45*time.Second).
