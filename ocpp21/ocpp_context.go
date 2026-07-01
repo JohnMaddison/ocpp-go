@@ -9,23 +9,23 @@ import (
 	"github.com/johnmaddison/ocpp-go/internal/uuidgenerator"
 )
 
-type OCPPContext struct {
+type Context struct {
 	ChargePointID      string
 	Queue              chan Request
 	storage            *CircularBuffer
 	messageIDGenerator uuidgenerator.MessageIDGeneratorMethod
 }
 
-func NewOCPPContext(chargePointID string) *OCPPContext {
-	return NewOCPPContextWithMessageIDGenerator(chargePointID, nil)
+func NewContext(chargePointID string) *Context {
+	return NewContextWithMessageIDGenerator(chargePointID, nil)
 }
 
-func NewOCPPContextWithMessageIDGenerator(chargePointID string, generator func() string) *OCPPContext {
+func NewContextWithMessageIDGenerator(chargePointID string, generator func() string) *Context {
 	capacity := 10
 	if generator == nil {
 		generator = uuidgenerator.DefaultUUIDGenerator
 	}
-	return &OCPPContext{
+	return &Context{
 		ChargePointID:      chargePointID,
 		Queue:              make(chan Request, capacity),
 		storage:            NewCircularBuffer(capacity),
@@ -55,27 +55,27 @@ type Request struct {
 	result chan ResultOrError
 }
 
-func (s *OCPPContext) Send(call ocpp.Call) (*ResultOrError, error) {
+func (s *Context) Send(call ocpp.Call) (*ResultOrError, error) {
 	return s.SendWithTimeout(call, 10*time.Second)
 }
 
 // SendCall sends a typed OCPP 2.1 CALL with a default 10-second timeout.
-func (s *OCPPContext) SendCall(action Action, payload any) (*ResultOrError, error) {
+func (s *Context) SendCall(action Action, payload any) (*ResultOrError, error) {
 	return s.Send(ocpp.Call{MessageType: ocpp.MessageTypeCall, Action: string(action), Payload: payload})
 }
 
-func (s *OCPPContext) SendWithTimeout(call ocpp.Call, timeout time.Duration) (*ResultOrError, error) {
+func (s *Context) SendWithTimeout(call ocpp.Call, timeout time.Duration) (*ResultOrError, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	return s.SendWithContext(ctx, call)
 }
 
 // SendCallWithContext sends a typed OCPP 2.1 CALL with context cancellation.
-func (s *OCPPContext) SendCallWithContext(ctx context.Context, action Action, payload any) (*ResultOrError, error) {
+func (s *Context) SendCallWithContext(ctx context.Context, action Action, payload any) (*ResultOrError, error) {
 	return s.SendWithContext(ctx, ocpp.Call{MessageType: ocpp.MessageTypeCall, Action: string(action), Payload: payload})
 }
 
-func (s *OCPPContext) SendWithContext(ctx context.Context, call ocpp.Call) (*ResultOrError, error) {
+func (s *Context) SendWithContext(ctx context.Context, call ocpp.Call) (*ResultOrError, error) {
 	if call.MessageID == "" {
 		call.MessageID = s.messageIDGenerator()
 	}
@@ -99,7 +99,7 @@ func (s *OCPPContext) SendWithContext(ctx context.Context, call ocpp.Call) (*Res
 	}
 }
 
-func (s *OCPPContext) SendCallAndExpectResult(action string, payload any) (*ocpp.CallResult, error) {
+func (s *Context) SendCallAndExpectResult(action string, payload any) (*ocpp.CallResult, error) {
 	call := &ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: s.messageIDGenerator(), Action: action, Payload: payload}
 	request, err := s.Send(*call)
 

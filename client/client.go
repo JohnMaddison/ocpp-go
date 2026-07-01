@@ -13,11 +13,11 @@ import (
 type Client struct {
 	chargePointID      string
 	address            string
-	ocppCallbacks      ocpp16.OCPPCallbacks
-	ocpp21Callbacks    ocpp21.OCPPCallbacks
+	ocppCallbacks      ocpp16.Callbacks
+	ocpp21Callbacks    ocpp21.Callbacks
 	socketCallbacks    ocpp.SocketCallbacks
-	OCPPContext        *ocpp16.OCPPContext
-	OCPP21Context      *ocpp21.OCPPContext
+	Context16          *ocpp16.Context
+	Context21          *ocpp21.Context
 	subprotocol        string
 	logTraffic         bool
 	logKeepalive       bool
@@ -28,11 +28,11 @@ type Client struct {
 	messageIDGenerator uuidgenerator.MessageIDGeneratorMethod
 }
 
-func NewOCPP16Client(chargePointID, address string) *Client {
+func New16(chargePointID, address string) *Client {
 	client := &Client{
 		chargePointID:      chargePointID,
 		address:            address,
-		OCPPContext:        nil,
+		Context16:          nil,
 		subprotocol:        "ocpp1.6",
 		messageIDGenerator: uuidgenerator.DefaultUUIDGenerator,
 	}
@@ -40,11 +40,11 @@ func NewOCPP16Client(chargePointID, address string) *Client {
 	return client
 }
 
-func NewOCPP21Client(chargePointID, address string) *Client {
+func New21(chargePointID, address string) *Client {
 	client := &Client{
 		chargePointID:      chargePointID,
 		address:            address,
-		OCPP21Context:      nil,
+		Context21:          nil,
 		subprotocol:        "ocpp2.1",
 		messageIDGenerator: uuidgenerator.DefaultUUIDGenerator,
 	}
@@ -76,14 +76,14 @@ func (c *Client) WithAddress(address string) *Client {
 	return c
 }
 
-func (c *Client) WithOCPP16Callbacks(callbacks ocpp16.OCPPCallbacks) *Client {
+func (c *Client) With16Callbacks(callbacks ocpp16.Callbacks) *Client {
 	callbacks.InitHandlers()
 	c.ocppCallbacks = callbacks
 	c.subprotocol = "ocpp1.6"
 	return c
 }
 
-func (c *Client) WithOCPP21Callbacks(callbacks ocpp21.OCPPCallbacks) *Client {
+func (c *Client) With21Callbacks(callbacks ocpp21.Callbacks) *Client {
 	callbacks.InitHandlers()
 	c.ocpp21Callbacks = callbacks
 	c.subprotocol = "ocpp2.1"
@@ -120,10 +120,10 @@ func (c *Client) WithWebsocketKeepalive(interval, pongTimeout time.Duration) *Cl
 	return c
 }
 
-func (c *Client) SendOCPP16Call(action ocpp16.Action, payload any) (*ocpp16.ResultOrError, error) {
-	return c.OCPPContext.SendCall(action, payload)
+func (c *Client) Send16Call(action ocpp16.Action, payload any) (*ocpp16.ResultOrError, error) {
+	return c.Context16.SendCall(action, payload)
 }
 
-func (c *Client) SendOCPP21Call(action ocpp21.Action, payload any) (*ocpp21.ResultOrError, error) {
-	return c.OCPP21Context.SendCall(action, payload)
+func (c *Client) Send21Call(action ocpp21.Action, payload any) (*ocpp21.ResultOrError, error) {
+	return c.Context21.SendCall(action, payload)
 }

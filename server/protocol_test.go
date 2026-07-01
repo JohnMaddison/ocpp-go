@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/johnmaddison/ocpp-go/ocpp16"
 	"github.com/johnmaddison/ocpp-go/ocpp21"
-	"github.com/gorilla/websocket"
 )
 
 func TestServerProtocols(t *testing.T) {
@@ -18,9 +18,9 @@ func TestServerProtocols(t *testing.T) {
 		want []string
 	}{
 		{name: "default", srv: NewServer(":0"), want: []string{"ocpp1.6"}},
-		{name: "ocpp16", srv: NewServer(":0", WithOCPP16Callbacks(ocpp16.OCPPCallbacks{})), want: []string{"ocpp1.6"}},
-		{name: "ocpp21", srv: NewServer(":0", WithOCPP21Callbacks(ocpp21.OCPPCallbacks{})), want: []string{"ocpp2.1"}},
-		{name: "mixed", srv: NewServer(":0", WithOCPP16Callbacks(ocpp16.OCPPCallbacks{}), WithOCPP21Callbacks(ocpp21.OCPPCallbacks{})), want: []string{"ocpp1.6", "ocpp2.1"}},
+		{name: "ocpp16", srv: NewServer(":0", With16Callbacks(ocpp16.Callbacks{})), want: []string{"ocpp1.6"}},
+		{name: "ocpp21", srv: NewServer(":0", With21Callbacks(ocpp21.Callbacks{})), want: []string{"ocpp2.1"}},
+		{name: "mixed", srv: NewServer(":0", With16Callbacks(ocpp16.Callbacks{}), With21Callbacks(ocpp21.Callbacks{})), want: []string{"ocpp1.6", "ocpp2.1"}},
 	}
 
 	for _, tt := range tests {
@@ -42,14 +42,14 @@ func TestWshandler_RoutesBySubprotocol(t *testing.T) {
 	var called16 bool
 	var called21 bool
 	srv := NewServer(":0",
-		WithOCPP16Callbacks(ocpp16.OCPPCallbacks{
-			BootNotification: func(ctx *ocpp16.OCPPContext, request ocpp16.BootNotificationRequest) (*ocpp16.BootNotificationResponse, *ocpp16.OCPPError) {
+		With16Callbacks(ocpp16.Callbacks{
+			BootNotification: func(ctx *ocpp16.Context, request ocpp16.BootNotificationRequest) (*ocpp16.BootNotificationResponse, *ocpp16.Error) {
 				called16 = true
 				return &ocpp16.BootNotificationResponse{CurrentTime: time.Now(), Interval: 30, Status: ocpp16.RegistrationStatusAccepted}, nil
 			},
 		}),
-		WithOCPP21Callbacks(ocpp21.OCPPCallbacks{
-			BootNotification: func(ctx *ocpp21.OCPPContext, request ocpp21.BootNotificationRequest) (*ocpp21.BootNotificationResponse, *ocpp21.OCPPError) {
+		With21Callbacks(ocpp21.Callbacks{
+			BootNotification: func(ctx *ocpp21.Context, request ocpp21.BootNotificationRequest) (*ocpp21.BootNotificationResponse, *ocpp21.Error) {
 				called21 = true
 				return &ocpp21.BootNotificationResponse{CurrentTime: time.Now(), Interval: 30, Status: ocpp21.RegistrationStatusEnumAccepted}, nil
 			},
@@ -84,7 +84,7 @@ func TestWshandler_RoutesBySubprotocol(t *testing.T) {
 }
 
 func TestWshandler_RejectsMissingOrUnsupportedSubprotocol(t *testing.T) {
-	srv := NewServer(":0", WithOCPP21Callbacks(ocpp21.OCPPCallbacks{}))
+	srv := NewServer(":0", With21Callbacks(ocpp21.Callbacks{}))
 	testServer := newWebsocketTestServer(srv)
 	defer testServer.Close()
 	wsURL := "ws" + testServer.URL[4:] + "/ws/CP123"

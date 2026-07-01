@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/johnmaddison/ocpp-go"
 	"github.com/johnmaddison/ocpp-go/internal/uuidgenerator"
 	"github.com/johnmaddison/ocpp-go/ocpp16"
 	"github.com/johnmaddison/ocpp-go/ocpp21"
-	"github.com/gorilla/websocket"
 )
 
 type Server struct {
@@ -22,12 +22,12 @@ type Server struct {
 	httpServer       *http.Server
 	activeWebsockets map[*websocket.Conn]struct{}
 	sessions         map[string]*Session
-	ocppCallbacks    ocpp16.OCPPCallbacks
-	ocpp21Callbacks  ocpp21.OCPPCallbacks
+	ocppCallbacks    ocpp16.Callbacks
+	ocpp21Callbacks  ocpp21.Callbacks
 	socketCallbacks  ocpp.SocketCallbacks
 	logTraffic       bool
 	logKeepalive     bool
-	parser           func(message []byte, ctx *ocpp16.OCPPContext) ([]byte, error)
+	parser           func(message []byte, ctx *ocpp16.Context) ([]byte, error)
 	subprotocols     []string
 	ocpp16Enabled    bool
 	ocpp21Enabled    bool
@@ -63,7 +63,7 @@ func NewServer(address string, opts ...Option) *Server {
 	return s
 }
 
-func ensureOCPP16Parser(s *Server) {
+func ensure16Parser(s *Server) {
 	s.ocppCallbacks.InitHandlers()
 	s.ocpp16Enabled = true
 	if s.parser == nil {
@@ -71,8 +71,8 @@ func ensureOCPP16Parser(s *Server) {
 	}
 }
 
-// WithOCPP16Callbacks sets OCPP 1.6 callbacks and uses its ParseMessage.
-func WithOCPP16Callbacks(cb ocpp16.OCPPCallbacks) Option {
+// With16Callbacks sets OCPP 1.6 callbacks and uses its ParseMessage.
+func With16Callbacks(cb ocpp16.Callbacks) Option {
 	return func(s *Server) {
 		// Ensure callback handlers are initialized so ParseMessage can route actions
 		cb.InitHandlers()
@@ -82,8 +82,8 @@ func WithOCPP16Callbacks(cb ocpp16.OCPPCallbacks) Option {
 	}
 }
 
-// WithOCPP21Callbacks sets OCPP 2.1 callbacks and uses its ParseMessage for ocpp2.1 connections.
-func WithOCPP21Callbacks(cb ocpp21.OCPPCallbacks) Option {
+// With21Callbacks sets OCPP 2.1 callbacks and uses its ParseMessage for ocpp2.1 connections.
+func With21Callbacks(cb ocpp21.Callbacks) Option {
 	return func(s *Server) {
 		cb.InitHandlers()
 		s.ocpp21Callbacks = cb
@@ -92,7 +92,7 @@ func WithOCPP21Callbacks(cb ocpp21.OCPPCallbacks) Option {
 }
 
 // WithParser sets a custom message parse function.
-func WithParser(p func(message []byte, ctx *ocpp16.OCPPContext) ([]byte, error)) Option {
+func WithParser(p func(message []byte, ctx *ocpp16.Context) ([]byte, error)) Option {
 	return func(s *Server) {
 		s.parser = p
 		s.ocpp16Enabled = true

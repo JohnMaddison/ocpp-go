@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/johnmaddison/ocpp-go/ocpp16"
 	"github.com/johnmaddison/ocpp-go/ocpp21"
-	"github.com/google/uuid"
 )
 
 func TestServerUsesDefaultMessageIDGenerator(t *testing.T) {
@@ -27,10 +27,10 @@ func TestServerMessageIDGeneratorCanBeOverridden(t *testing.T) {
 	}
 }
 
-func TestWithOCPP16BootNotificationHandlerRoutesIncomingCall(t *testing.T) {
+func TestWith16BootNotificationHandlerRoutesIncomingCall(t *testing.T) {
 	called := false
 	s := NewServer(":0",
-		WithOCPP16BootNotificationHandler(func(ctx *ocpp16.OCPPContext, request ocpp16.BootNotificationRequest) (*ocpp16.BootNotificationResponse, *ocpp16.OCPPError) {
+		With16BootNotificationHandler(func(ctx *ocpp16.Context, request ocpp16.BootNotificationRequest) (*ocpp16.BootNotificationResponse, *ocpp16.Error) {
 			called = true
 			if ctx.ChargePointID != "CP_1" {
 				t.Fatalf("expected charge point ID CP_1, got %s", ctx.ChargePointID)
@@ -50,7 +50,7 @@ func TestWithOCPP16BootNotificationHandlerRoutesIncomingCall(t *testing.T) {
 		t.Fatal("expected parser to be configured")
 	}
 
-	response, err := s.parser([]byte(`[2,"msg-1","BootNotification",{"chargePointModel":"Simulator","chargePointVendor":"OCPP-GO"}]`), ocpp16.NewOCPPContext("CP_1"))
+	response, err := s.parser([]byte(`[2,"msg-1","BootNotification",{"chargePointModel":"Simulator","chargePointVendor":"OCPP-GO"}]`), ocpp16.NewContext("CP_1"))
 	if err != nil {
 		t.Fatalf("parser returned error: %v", err)
 	}
@@ -69,19 +69,19 @@ func TestWithOCPP16BootNotificationHandlerRoutesIncomingCall(t *testing.T) {
 }
 
 func TestHandlerOptionDoesNotOverrideCustomParser(t *testing.T) {
-	customParser := func(message []byte, ctx *ocpp16.OCPPContext) ([]byte, error) {
+	customParser := func(message []byte, ctx *ocpp16.Context) ([]byte, error) {
 		return []byte(`[3,"custom",{}]`), nil
 	}
 
 	s := NewServer(":0",
 		WithParser(customParser),
-		WithOCPP16BootNotificationHandler(func(ctx *ocpp16.OCPPContext, request ocpp16.BootNotificationRequest) (*ocpp16.BootNotificationResponse, *ocpp16.OCPPError) {
+		With16BootNotificationHandler(func(ctx *ocpp16.Context, request ocpp16.BootNotificationRequest) (*ocpp16.BootNotificationResponse, *ocpp16.Error) {
 			t.Fatal("custom parser should have been used")
 			return nil, nil
 		}),
 	)
 
-	response, err := s.parser([]byte(`[2,"msg-1","BootNotification",{}]`), ocpp16.NewOCPPContext("CP_1"))
+	response, err := s.parser([]byte(`[2,"msg-1","BootNotification",{}]`), ocpp16.NewContext("CP_1"))
 	if err != nil {
 		t.Fatalf("parser returned error: %v", err)
 	}
@@ -92,10 +92,10 @@ func TestHandlerOptionDoesNotOverrideCustomParser(t *testing.T) {
 	}
 }
 
-func TestWithOCPP21BootNotificationHandlerRoutesIncomingCall(t *testing.T) {
+func TestWith21BootNotificationHandlerRoutesIncomingCall(t *testing.T) {
 	called := false
 	s := NewServer(":0",
-		WithOCPP21BootNotificationHandler(func(ctx *ocpp21.OCPPContext, request ocpp21.BootNotificationRequest) (*ocpp21.BootNotificationResponse, *ocpp21.OCPPError) {
+		With21BootNotificationHandler(func(ctx *ocpp21.Context, request ocpp21.BootNotificationRequest) (*ocpp21.BootNotificationResponse, *ocpp21.Error) {
 			called = true
 			if ctx.ChargePointID != "CP_1" {
 				t.Fatalf("expected charge point ID CP_1, got %s", ctx.ChargePointID)
@@ -112,7 +112,7 @@ func TestWithOCPP21BootNotificationHandlerRoutesIncomingCall(t *testing.T) {
 		t.Fatal("expected ocpp2.1 to be enabled")
 	}
 
-	response, err := s.ocpp21Callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification",{}]`), ocpp21.NewOCPPContext("CP_1"))
+	response, err := s.ocpp21Callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification",{}]`), ocpp21.NewContext("CP_1"))
 	if err != nil {
 		t.Fatalf("parser returned error: %v", err)
 	}
@@ -128,10 +128,10 @@ func TestWithOCPP21BootNotificationHandlerRoutesIncomingCall(t *testing.T) {
 
 func TestVersionedBootNotificationHandlersDoNotConflict(t *testing.T) {
 	s := NewServer(":0",
-		WithOCPP16BootNotificationHandler(func(ctx *ocpp16.OCPPContext, request ocpp16.BootNotificationRequest) (*ocpp16.BootNotificationResponse, *ocpp16.OCPPError) {
+		With16BootNotificationHandler(func(ctx *ocpp16.Context, request ocpp16.BootNotificationRequest) (*ocpp16.BootNotificationResponse, *ocpp16.Error) {
 			return &ocpp16.BootNotificationResponse{CurrentTime: time.Now(), Interval: 30, Status: ocpp16.RegistrationStatusAccepted}, nil
 		}),
-		WithOCPP21BootNotificationHandler(func(ctx *ocpp21.OCPPContext, request ocpp21.BootNotificationRequest) (*ocpp21.BootNotificationResponse, *ocpp21.OCPPError) {
+		With21BootNotificationHandler(func(ctx *ocpp21.Context, request ocpp21.BootNotificationRequest) (*ocpp21.BootNotificationResponse, *ocpp21.Error) {
 			return &ocpp21.BootNotificationResponse{CurrentTime: time.Now(), Interval: 30, Status: ocpp21.RegistrationStatusEnumAccepted}, nil
 		}),
 	)

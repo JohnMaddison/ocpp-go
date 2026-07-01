@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/johnmaddison/ocpp-go"
 	"github.com/johnmaddison/ocpp-go/ocpp16"
 	"github.com/johnmaddison/ocpp-go/ocpp21"
-	"github.com/gorilla/websocket"
 )
 
 func TestServerSessionMissing(t *testing.T) {
@@ -22,9 +22,9 @@ func TestServerSessionMissing(t *testing.T) {
 	}
 }
 
-func TestServerSessionSendOCPP16(t *testing.T) {
+func TestServerSessionSend16(t *testing.T) {
 	srv := NewServer(":0",
-		WithOCPP16Callbacks(ocpp16.OCPPCallbacks{}),
+		With16Callbacks(ocpp16.Callbacks{}),
 		WithMessageIDGenerator(func() string { return "server-16" }),
 	)
 	testServer := newSessionTestServer(srv)
@@ -43,18 +43,18 @@ func TestServerSessionSendOCPP16(t *testing.T) {
 	if session.RemoteAddr() == nil || session.LocalAddr() == nil {
 		t.Fatal("expected local and remote addresses to be set")
 	}
-	if _, ok := session.OCPP16Context(); !ok {
-		t.Fatal("expected OCPP16Context")
+	if _, ok := session.Context16(); !ok {
+		t.Fatal("expected Context16")
 	}
-	if _, ok := session.OCPP21Context(); ok {
-		t.Fatal("did not expect OCPP21Context")
+	if _, ok := session.Context21(); ok {
+		t.Fatal("did not expect Context21")
 	}
 
 	resultCh := make(chan send16Result, 1)
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
-		result, err := session.SendOCPP16CallWithContext(ctx, ocpp16.ActionDataTransfer, ocpp16.DataTransferRequest{VendorID: "vendor"})
+		result, err := session.Send16CallWithContext(ctx, ocpp16.ActionDataTransfer, ocpp16.DataTransferRequest{VendorID: "vendor"})
 		resultCh <- send16Result{result: result, err: err}
 	}()
 
@@ -69,7 +69,7 @@ func TestServerSessionSendOCPP16(t *testing.T) {
 
 	got := <-resultCh
 	if got.err != nil {
-		t.Fatalf("SendOCPP16WithContext returned error: %v", got.err)
+		t.Fatalf("Send16WithContext returned error: %v", got.err)
 	}
 	payload, ok := got.result.CallResult.Payload.(ocpp16.DataTransferResponse)
 	if !ok {
@@ -80,9 +80,9 @@ func TestServerSessionSendOCPP16(t *testing.T) {
 	}
 }
 
-func TestServerSessionSendOCPP21(t *testing.T) {
+func TestServerSessionSend21(t *testing.T) {
 	srv := NewServer(":0",
-		WithOCPP21Callbacks(ocpp21.OCPPCallbacks{}),
+		With21Callbacks(ocpp21.Callbacks{}),
 		WithMessageIDGenerator(func() string { return "server-21" }),
 	)
 	testServer := newSessionTestServer(srv)
@@ -95,18 +95,18 @@ func TestServerSessionSendOCPP21(t *testing.T) {
 	if session.Protocol() != "ocpp2.1" {
 		t.Fatalf("Protocol = %q, want ocpp2.1", session.Protocol())
 	}
-	if _, ok := session.OCPP21Context(); !ok {
-		t.Fatal("expected OCPP21Context")
+	if _, ok := session.Context21(); !ok {
+		t.Fatal("expected Context21")
 	}
-	if _, ok := session.OCPP16Context(); ok {
-		t.Fatal("did not expect OCPP16Context")
+	if _, ok := session.Context16(); ok {
+		t.Fatal("did not expect Context16")
 	}
 
 	resultCh := make(chan send21Result, 1)
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
-		result, err := session.SendOCPP21CallWithContext(ctx, ocpp21.ActionDataTransfer, ocpp21.DataTransferRequest{VendorID: "vendor"})
+		result, err := session.Send21CallWithContext(ctx, ocpp21.ActionDataTransfer, ocpp21.DataTransferRequest{VendorID: "vendor"})
 		resultCh <- send21Result{result: result, err: err}
 	}()
 
@@ -121,7 +121,7 @@ func TestServerSessionSendOCPP21(t *testing.T) {
 
 	got := <-resultCh
 	if got.err != nil {
-		t.Fatalf("SendOCPP21WithContext returned error: %v", got.err)
+		t.Fatalf("Send21WithContext returned error: %v", got.err)
 	}
 	payload, ok := got.result.CallResult.Payload.(ocpp21.DataTransferResponse)
 	if !ok {
@@ -136,38 +136,38 @@ func TestSessionWrongProtocolErrors(t *testing.T) {
 	session16 := &Session{
 		chargePointID: "CP16",
 		protocol:      "ocpp1.6",
-		ocpp16Context: ocpp16.NewOCPPContext("CP16"),
+		ocpp16Context: ocpp16.NewContext("CP16"),
 	}
-	if _, err := session16.SendOCPP21(ocpp.Call{}); err == nil || !strings.Contains(err.Error(), "session CP16 uses ocpp1.6, not ocpp2.1") {
-		t.Fatalf("SendOCPP21 error = %v", err)
+	if _, err := session16.Send21(ocpp.Call{}); err == nil || !strings.Contains(err.Error(), "session CP16 uses ocpp1.6, not ocpp2.1") {
+		t.Fatalf("Send21 error = %v", err)
 	}
-	if _, err := session16.SendOCPP21Call(ocpp21.ActionDataTransfer, ocpp21.DataTransferRequest{}); err == nil || !strings.Contains(err.Error(), "session CP16 uses ocpp1.6, not ocpp2.1") {
-		t.Fatalf("SendOCPP21Call error = %v", err)
+	if _, err := session16.Send21Call(ocpp21.ActionDataTransfer, ocpp21.DataTransferRequest{}); err == nil || !strings.Contains(err.Error(), "session CP16 uses ocpp1.6, not ocpp2.1") {
+		t.Fatalf("Send21Call error = %v", err)
 	}
-	if _, err := session16.SendOCPP21CallWithContext(context.Background(), ocpp21.ActionDataTransfer, ocpp21.DataTransferRequest{}); err == nil || !strings.Contains(err.Error(), "session CP16 uses ocpp1.6, not ocpp2.1") {
-		t.Fatalf("SendOCPP21CallWithContext error = %v", err)
+	if _, err := session16.Send21CallWithContext(context.Background(), ocpp21.ActionDataTransfer, ocpp21.DataTransferRequest{}); err == nil || !strings.Contains(err.Error(), "session CP16 uses ocpp1.6, not ocpp2.1") {
+		t.Fatalf("Send21CallWithContext error = %v", err)
 	}
 
 	session21 := &Session{
 		chargePointID: "CP21",
 		protocol:      "ocpp2.1",
-		ocpp21Context: ocpp21.NewOCPPContext("CP21"),
+		ocpp21Context: ocpp21.NewContext("CP21"),
 	}
-	if _, err := session21.SendOCPP16(ocpp.Call{}); err == nil || !strings.Contains(err.Error(), "session CP21 uses ocpp2.1, not ocpp1.6") {
-		t.Fatalf("SendOCPP16 error = %v", err)
+	if _, err := session21.Send16(ocpp.Call{}); err == nil || !strings.Contains(err.Error(), "session CP21 uses ocpp2.1, not ocpp1.6") {
+		t.Fatalf("Send16 error = %v", err)
 	}
-	if _, err := session21.SendOCPP16Call(ocpp16.ActionDataTransfer, ocpp16.DataTransferRequest{}); err == nil || !strings.Contains(err.Error(), "session CP21 uses ocpp2.1, not ocpp1.6") {
-		t.Fatalf("SendOCPP16Call error = %v", err)
+	if _, err := session21.Send16Call(ocpp16.ActionDataTransfer, ocpp16.DataTransferRequest{}); err == nil || !strings.Contains(err.Error(), "session CP21 uses ocpp2.1, not ocpp1.6") {
+		t.Fatalf("Send16Call error = %v", err)
 	}
-	if _, err := session21.SendOCPP16CallWithContext(context.Background(), ocpp16.ActionDataTransfer, ocpp16.DataTransferRequest{}); err == nil || !strings.Contains(err.Error(), "session CP21 uses ocpp2.1, not ocpp1.6") {
-		t.Fatalf("SendOCPP16CallWithContext error = %v", err)
+	if _, err := session21.Send16CallWithContext(context.Background(), ocpp16.ActionDataTransfer, ocpp16.DataTransferRequest{}); err == nil || !strings.Contains(err.Error(), "session CP21 uses ocpp2.1, not ocpp1.6") {
+		t.Fatalf("Send16CallWithContext error = %v", err)
 	}
 }
 
 func TestServerSessionDuplicateIDLatestWins(t *testing.T) {
 	disconnected := make(chan string, 2)
 	srv := NewServer(":0",
-		WithOCPP16Callbacks(ocpp16.OCPPCallbacks{}),
+		With16Callbacks(ocpp16.Callbacks{}),
 		WithDisconnectHandler(func(info ocpp.ConnectionInfo) {
 			disconnected <- info.ChargePointID
 		}),

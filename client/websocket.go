@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/johnmaddison/ocpp-go/internal/ws"
 	"github.com/johnmaddison/ocpp-go/ocpp16"
 	"github.com/johnmaddison/ocpp-go/ocpp21"
-	"github.com/gorilla/websocket"
 )
 
 func (c *Client) Connect() error {
@@ -56,12 +56,12 @@ func (c *Client) Connect() error {
 func (c *Client) runtime() (ws.Runtime, error) {
 	switch c.subprotocol {
 	case "ocpp1.6":
-		c.OCPPContext = ocpp16.NewOCPPContextWithMessageIDGenerator(c.chargePointID, c.messageIDGenerator)
+		c.Context16 = ocpp16.NewContextWithMessageIDGenerator(c.chargePointID, c.messageIDGenerator)
 		return ws.Runtime{
-			ChargePointID: c.OCPPContext.ChargePointID,
-			OutgoingCalls: requestChannel[ocpp16.Request](c.OCPPContext.Queue),
+			ChargePointID: c.Context16.ChargePointID,
+			OutgoingCalls: requestChannel[ocpp16.Request](c.Context16.Queue),
 			Parse: func(message []byte) ([]byte, error) {
-				return c.ocppCallbacks.ParseMessage(message, c.OCPPContext)
+				return c.ocppCallbacks.ParseMessage(message, c.Context16)
 			},
 			Serialize: func(call any) ([]byte, error) {
 				request := call.(ocpp16.Request)
@@ -69,12 +69,12 @@ func (c *Client) runtime() (ws.Runtime, error) {
 			},
 		}, nil
 	case "ocpp2.1":
-		c.OCPP21Context = ocpp21.NewOCPPContextWithMessageIDGenerator(c.chargePointID, c.messageIDGenerator)
+		c.Context21 = ocpp21.NewContextWithMessageIDGenerator(c.chargePointID, c.messageIDGenerator)
 		return ws.Runtime{
-			ChargePointID: c.OCPP21Context.ChargePointID,
-			OutgoingCalls: requestChannel[ocpp21.Request](c.OCPP21Context.Queue),
+			ChargePointID: c.Context21.ChargePointID,
+			OutgoingCalls: requestChannel[ocpp21.Request](c.Context21.Queue),
 			Parse: func(message []byte) ([]byte, error) {
-				return c.ocpp21Callbacks.ParseMessage(message, c.OCPP21Context)
+				return c.ocpp21Callbacks.ParseMessage(message, c.Context21)
 			},
 			Serialize: func(call any) ([]byte, error) {
 				request := call.(ocpp21.Request)

@@ -9,8 +9,8 @@ import (
 )
 
 func TestParseMessage_BootNotificationCall(t *testing.T) {
-	callbacks := OCPPCallbacks{
-		BootNotification: func(ctx *OCPPContext, request BootNotificationRequest) (*BootNotificationResponse, *OCPPError) {
+	callbacks := Callbacks{
+		BootNotification: func(ctx *Context, request BootNotificationRequest) (*BootNotificationResponse, *Error) {
 			if ctx.ChargePointID != "CP_TEST" {
 				t.Fatalf("unexpected charge point ID: %s", ctx.ChargePointID)
 			}
@@ -25,7 +25,7 @@ func TestParseMessage_BootNotificationCall(t *testing.T) {
 		},
 	}
 
-	response, err := callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification",{"chargePointModel":"Simulator","chargePointVendor":"Maddison"}]`), NewOCPPContext("CP_TEST"))
+	response, err := callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification",{"chargePointModel":"Simulator","chargePointVendor":"Maddison"}]`), NewContext("CP_TEST"))
 	if err != nil {
 		t.Fatalf("ParseMessage returned error: %v", err)
 	}
@@ -40,9 +40,9 @@ func TestParseMessage_BootNotificationCall(t *testing.T) {
 }
 
 func TestParseMessage_UnsupportedCallReturnsCallError(t *testing.T) {
-	callbacks := OCPPCallbacks{}
+	callbacks := Callbacks{}
 
-	response, err := callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification",{}]`), NewOCPPContext("CP_TEST"))
+	response, err := callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification",{}]`), NewContext("CP_TEST"))
 	if err != nil {
 		t.Fatalf("ParseMessage returned error: %v", err)
 	}
@@ -57,14 +57,14 @@ func TestParseMessage_UnsupportedCallReturnsCallError(t *testing.T) {
 }
 
 func TestParseMessage_MalformedPayloadReturnsFormationViolation(t *testing.T) {
-	callbacks := OCPPCallbacks{
-		BootNotification: func(ctx *OCPPContext, request BootNotificationRequest) (*BootNotificationResponse, *OCPPError) {
+	callbacks := Callbacks{
+		BootNotification: func(ctx *Context, request BootNotificationRequest) (*BootNotificationResponse, *Error) {
 			t.Fatal("callback should not be called")
 			return nil, nil
 		},
 	}
 
-	response, err := callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification","bad-payload"]`), NewOCPPContext("CP_TEST"))
+	response, err := callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification","bad-payload"]`), NewContext("CP_TEST"))
 	if err != nil {
 		t.Fatalf("ParseMessage returned error: %v", err)
 	}
@@ -79,8 +79,8 @@ func TestParseMessage_MalformedPayloadReturnsFormationViolation(t *testing.T) {
 }
 
 func TestParseMessage_DecodesBootNotificationCallResult(t *testing.T) {
-	callbacks := OCPPCallbacks{}
-	ctx := NewOCPPContext("CP_TEST")
+	callbacks := Callbacks{}
+	ctx := NewContext("CP_TEST")
 	result := make(chan ResultOrError, 1)
 
 	ctx.storage.Add(Request{

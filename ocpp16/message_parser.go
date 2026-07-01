@@ -9,11 +9,11 @@ import (
 	"github.com/johnmaddison/ocpp-go"
 )
 
-type OCPPMessage []any
+type rawMessage []any
 
-func (o *OCPPCallbacks) ParseMessage(message []byte, ctx *OCPPContext) ([]byte, error) {
+func (o *Callbacks) ParseMessage(message []byte, ctx *Context) ([]byte, error) {
 	// Parse the OCPP message using standard JSON
-	var ocppMessage OCPPMessage
+	var ocppMessage rawMessage
 	if err := json.Unmarshal(message, &ocppMessage); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal OCPP message: %w", err)
 	}
@@ -135,7 +135,7 @@ func (o *OCPPCallbacks) ParseMessage(message []byte, ctx *OCPPContext) ([]byte, 
 	return nil, fmt.Errorf("message type not implemented: %d", int(messageType))
 }
 
-func (o *OCPPCallbacks) processCall(messageID string, action Action, payload any, ctx *OCPPContext) (*ocpp.CallResult, *ocpp.CallError, error) {
+func (o *Callbacks) processCall(messageID string, action Action, payload any, ctx *Context) (*ocpp.CallResult, *ocpp.CallError, error) {
 
 	handler, ok := o.handlers[action]
 	if !ok || handler.callback == nil {
@@ -162,7 +162,7 @@ func (o *OCPPCallbacks) processCall(messageID string, action Action, payload any
 
 	results := reflect.ValueOf(handler.callback).Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(req)})
 	if !results[1].IsNil() {
-		callErr := results[1].Interface().(*OCPPError)
+		callErr := results[1].Interface().(*Error)
 		return nil, &ocpp.CallError{
 			MessageType:      ocpp.MessageTypeCallError,
 			MessageID:        messageID,
@@ -184,7 +184,7 @@ func (o *OCPPCallbacks) processCall(messageID string, action Action, payload any
 
 }
 
-func (o *OCPPCallbacks) decodeCallResultPayload(action Action, payload any) (any, error) {
+func (o *Callbacks) decodeCallResultPayload(action Action, payload any) (any, error) {
 	handler, ok := o.handlers[action]
 	if !ok {
 		return payload, nil

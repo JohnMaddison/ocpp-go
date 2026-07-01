@@ -5,15 +5,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/johnmaddison/ocpp-go/ocpp16"
 	"github.com/johnmaddison/ocpp-go/ocpp21"
-	"github.com/google/uuid"
 )
 
 func TestNewClientInitializesOCPPHandlers(t *testing.T) {
-	c := NewOCPP16Client("CP_1", "ws://127.0.0.1:9001/ocpp")
+	c := New16("CP_1", "ws://127.0.0.1:9001/ocpp")
 
-	response, err := c.ocppCallbacks.ParseMessage([]byte(`[2,"msg-1","GetConfiguration",{"key":[]}]`), ocpp16.NewOCPPContext("CP_1"))
+	response, err := c.ocppCallbacks.ParseMessage([]byte(`[2,"msg-1","GetConfiguration",{"key":[]}]`), ocpp16.NewContext("CP_1"))
 	if err != nil {
 		t.Fatalf("ParseMessage returned error: %v", err)
 	}
@@ -28,12 +28,12 @@ func TestNewClientInitializesOCPPHandlers(t *testing.T) {
 }
 
 func TestVersionedConstructorsSelectSingleSubprotocol(t *testing.T) {
-	client16 := NewOCPP16Client("CP_1", "ws://127.0.0.1:9001/ocpp")
+	client16 := New16("CP_1", "ws://127.0.0.1:9001/ocpp")
 	if client16.subprotocol != "ocpp1.6" {
 		t.Fatalf("OCPP 1.6 client subprotocol = %q", client16.subprotocol)
 	}
 
-	client21 := NewOCPP21Client("CP_1", "ws://127.0.0.1:9001/ocpp")
+	client21 := New21("CP_1", "ws://127.0.0.1:9001/ocpp")
 	if client21.subprotocol != "ocpp2.1" {
 		t.Fatalf("OCPP 2.1 client subprotocol = %q", client21.subprotocol)
 	}
@@ -41,8 +41,8 @@ func TestVersionedConstructorsSelectSingleSubprotocol(t *testing.T) {
 
 func TestClientConstructorsUseDefaultMessageIDGenerator(t *testing.T) {
 	for _, c := range []*Client{
-		NewOCPP16Client("CP_1", "ws://127.0.0.1:9001/ocpp"),
-		NewOCPP21Client("CP_1", "ws://127.0.0.1:9001/ocpp"),
+		New16("CP_1", "ws://127.0.0.1:9001/ocpp"),
+		New21("CP_1", "ws://127.0.0.1:9001/ocpp"),
 	} {
 		if c.messageIDGenerator == nil {
 			t.Fatal("expected default message ID generator")
@@ -54,7 +54,7 @@ func TestClientConstructorsUseDefaultMessageIDGenerator(t *testing.T) {
 }
 
 func TestClientMessageIDGeneratorCanBeOverridden(t *testing.T) {
-	c := NewOCPP16Client("CP_1", "ws://127.0.0.1:9001/ocpp").
+	c := New16("CP_1", "ws://127.0.0.1:9001/ocpp").
 		WithMessageIDGenerator(func() string { return "custom-id" })
 
 	if got := c.messageIDGenerator(); got != "custom-id" {
@@ -64,8 +64,8 @@ func TestClientMessageIDGeneratorCanBeOverridden(t *testing.T) {
 
 func TestOCPP21ClientCallbacksUseOCPP21Types(t *testing.T) {
 	called := false
-	c := NewOCPP21Client("CP_1", "ws://127.0.0.1:9001/ocpp").WithOCPP21Callbacks(ocpp21.OCPPCallbacks{
-		BootNotification: func(ctx *ocpp21.OCPPContext, request ocpp21.BootNotificationRequest) (*ocpp21.BootNotificationResponse, *ocpp21.OCPPError) {
+	c := New21("CP_1", "ws://127.0.0.1:9001/ocpp").With21Callbacks(ocpp21.Callbacks{
+		BootNotification: func(ctx *ocpp21.Context, request ocpp21.BootNotificationRequest) (*ocpp21.BootNotificationResponse, *ocpp21.Error) {
 			called = true
 			if ctx.ChargePointID != "CP_1" {
 				t.Fatalf("expected charge point ID CP_1, got %s", ctx.ChargePointID)
@@ -78,7 +78,7 @@ func TestOCPP21ClientCallbacksUseOCPP21Types(t *testing.T) {
 		},
 	})
 
-	response, err := c.ocpp21Callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification",{}]`), ocpp21.NewOCPPContext("CP_1"))
+	response, err := c.ocpp21Callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification",{}]`), ocpp21.NewContext("CP_1"))
 	if err != nil {
 		t.Fatalf("ParseMessage returned error: %v", err)
 	}
@@ -92,12 +92,12 @@ func TestOCPP21ClientCallbacksUseOCPP21Types(t *testing.T) {
 	}
 }
 
-func TestWithOCPP16GetConfigurationHandlerRoutesIncomingCall(t *testing.T) {
+func TestWith16GetConfigurationHandlerRoutesIncomingCall(t *testing.T) {
 	const value = "Simulator"
 	called := false
 
-	c := NewOCPP16Client("CP_1", "ws://127.0.0.1:9001/ocpp").
-		WithOCPP16GetConfigurationHandler(func(ctx *ocpp16.OCPPContext, request ocpp16.GetConfigurationRequest) (*ocpp16.GetConfigurationResponse, *ocpp16.OCPPError) {
+	c := New16("CP_1", "ws://127.0.0.1:9001/ocpp").
+		With16GetConfigurationHandler(func(ctx *ocpp16.Context, request ocpp16.GetConfigurationRequest) (*ocpp16.GetConfigurationResponse, *ocpp16.Error) {
 			called = true
 			if ctx.ChargePointID != "CP_1" {
 				t.Fatalf("expected charge point ID CP_1, got %s", ctx.ChargePointID)
@@ -112,7 +112,7 @@ func TestWithOCPP16GetConfigurationHandlerRoutesIncomingCall(t *testing.T) {
 			}, nil
 		})
 
-	response, err := c.ocppCallbacks.ParseMessage([]byte(`[2,"msg-1","GetConfiguration",{"key":["ChargePointModel"]}]`), ocpp16.NewOCPPContext("CP_1"))
+	response, err := c.ocppCallbacks.ParseMessage([]byte(`[2,"msg-1","GetConfiguration",{"key":["ChargePointModel"]}]`), ocpp16.NewContext("CP_1"))
 	if err != nil {
 		t.Fatalf("ParseMessage returned error: %v", err)
 	}
@@ -132,10 +132,10 @@ func TestWithOCPP16GetConfigurationHandlerRoutesIncomingCall(t *testing.T) {
 	}
 }
 
-func TestWithOCPP21BootNotificationHandlerRoutesIncomingCall(t *testing.T) {
+func TestWith21BootNotificationHandlerRoutesIncomingCall(t *testing.T) {
 	called := false
-	c := NewOCPP21Client("CP_1", "ws://127.0.0.1:9001/ocpp").
-		WithOCPP21BootNotificationHandler(func(ctx *ocpp21.OCPPContext, request ocpp21.BootNotificationRequest) (*ocpp21.BootNotificationResponse, *ocpp21.OCPPError) {
+	c := New21("CP_1", "ws://127.0.0.1:9001/ocpp").
+		With21BootNotificationHandler(func(ctx *ocpp21.Context, request ocpp21.BootNotificationRequest) (*ocpp21.BootNotificationResponse, *ocpp21.Error) {
 			called = true
 			if ctx.ChargePointID != "CP_1" {
 				t.Fatalf("expected charge point ID CP_1, got %s", ctx.ChargePointID)
@@ -147,7 +147,7 @@ func TestWithOCPP21BootNotificationHandlerRoutesIncomingCall(t *testing.T) {
 			}, nil
 		})
 
-	response, err := c.ocpp21Callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification",{}]`), ocpp21.NewOCPPContext("CP_1"))
+	response, err := c.ocpp21Callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification",{}]`), ocpp21.NewContext("CP_1"))
 	if err != nil {
 		t.Fatalf("ParseMessage returned error: %v", err)
 	}

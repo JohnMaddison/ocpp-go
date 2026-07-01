@@ -12,51 +12,51 @@ type callHandler struct {
 	callback     any
 }
 
-type OCPPError struct {
+type Error struct {
 	ErrorCode        string `json:"errorCode"`
 	ErrorDescription string `json:"errorDescription"`
 	ErrorDetails     any    `json:"errorDetails,omitempty"`
 }
 
-type AuthorizeCallback func(ctx *OCPPContext, request AuthorizeRequest) (*AuthorizeResponse, *OCPPError)
-type BootNotificationCallback func(ctx *OCPPContext, request BootNotificationRequest) (*BootNotificationResponse, *OCPPError)
-type CancelReservationCallback func(ctx *OCPPContext, request CancelReservationRequest) (*CancelReservationResponse, *OCPPError)
-type CertificateSignedCallback func(ctx *OCPPContext, request CertificateSignedRequest) (*CertificateSignedResponse, *OCPPError)
-type ChangeAvailabilityCallback func(ctx *OCPPContext, request ChangeAvailabilityRequest) (*ChangeAvailabilityResponse, *OCPPError)
-type ChangeConfigurationCallback func(ctx *OCPPContext, request ChangeConfigurationRequest) (*ChangeConfigurationResponse, *OCPPError)
-type ClearCacheCallback func(ctx *OCPPContext, request ClearCacheRequest) (*ClearCacheResponse, *OCPPError)
-type ClearChargingProfileCallback func(ctx *OCPPContext, request ClearChargingProfileRequest) (*ClearChargingProfileResponse, *OCPPError)
-type ClearReservationCallback func(ctx *OCPPContext, request CancelReservationRequest) (*CancelReservationResponse, *OCPPError)
-type DataTransferCallback func(ctx *OCPPContext, request DataTransferRequest) (*DataTransferResponse, *OCPPError)
-type DeleteCertificateCallback func(ctx *OCPPContext, request DeleteCertificateRequest) (*DeleteCertificateResponse, *OCPPError)
-type DiagnosticsStatusNotificationCallback func(ctx *OCPPContext, request DiagnosticsStatusNotificationRequest) (*DiagnosticsStatusNotificationResponse, *OCPPError)
-type ExtendedTriggerMessageCallback func(ctx *OCPPContext, request ExtendedTriggerMessageRequest) (*ExtendedTriggerMessageResponse, *OCPPError)
-type GetCompositeScheduleCallback func(ctx *OCPPContext, request GetCompositeScheduleRequest) (*GetCompositeScheduleResponse, *OCPPError)
-type GetConfigurationCallback func(ctx *OCPPContext, request GetConfigurationRequest) (*GetConfigurationResponse, *OCPPError)
-type GetDiagnosticsCallback func(ctx *OCPPContext, request GetDiagnosticsRequest) (*GetDiagnosticsResponse, *OCPPError)
-type GetInstalledCertificatesCallback func(ctx *OCPPContext, request GetInstalledCertificateIdsRequest) (*GetInstalledCertificateIdsResponse, *OCPPError)
-type GetLogCallback func(ctx *OCPPContext, request GetLogRequest) (*GetLogResponse, *OCPPError)
-type HeartbeatCallback func(ctx *OCPPContext, request HeartbeatRequest) (*HeartbeatResponse, *OCPPError)
-type InstallCertificateCallback func(ctx *OCPPContext, request InstallCertificateRequest) (*InstallCertificateResponse, *OCPPError)
-type LogStatusNotificationCallback func(ctx *OCPPContext, request LogStatusNotificationRequest) (*LogStatusNotificationResponse, *OCPPError)
-type MeterValuesCallback func(ctx *OCPPContext, request MeterValuesRequest) (*MeterValuesResponse, *OCPPError)
-type RemoteStartTransactionCallback func(ctx *OCPPContext, request RemoteStartTransactionRequest) (*RemoteStartTransactionResponse, *OCPPError)
-type RemoteStopTransactionCallback func(ctx *OCPPContext, request RemoteStopTransactionRequest) (*RemoteStopTransactionResponse, *OCPPError)
-type ReserveNowCallback func(ctx *OCPPContext, request ReserveNowRequest) (*ReserveNowResponse, *OCPPError)
-type ResetCallback func(ctx *OCPPContext, request ResetRequest) (*ResetResponse, *OCPPError)
-type SendLocalListCallback func(ctx *OCPPContext, request SendLocalListRequest) (*SendLocalListResponse, *OCPPError)
-type SetChargingProfileCallback func(ctx *OCPPContext, request SetChargingProfileRequest) (*SetChargingProfileResponse, *OCPPError)
-type SignCertificateCallback func(ctx *OCPPContext, request SignCertificateRequest) (*SignCertificateResponse, *OCPPError)
-type SignedFirmwareStatusNotificationCallback func(ctx *OCPPContext, request SignedFirmwareStatusNotificationRequest) (*SignedFirmwareStatusNotificationResponse, *OCPPError)
-type SignedUpdateFirmwareCallback func(ctx *OCPPContext, request SignedUpdateFirmwareRequest) (*SignedUpdateFirmwareResponse, *OCPPError)
-type StartTransactionCallback func(ctx *OCPPContext, request StartTransactionRequest) (*StartTransactionResponse, *OCPPError)
-type StatusNotificationCallback func(ctx *OCPPContext, request StatusNotificationRequest) (*StatusNotificationResponse, *OCPPError)
-type StopTransactionCallback func(ctx *OCPPContext, request StopTransactionRequest) (*StopTransactionResponse, *OCPPError)
-type TriggerMessageCallback func(ctx *OCPPContext, request TriggerMessageRequest) (*TriggerMessageResponse, *OCPPError)
-type UnlockConnectorCallback func(ctx *OCPPContext, request UnlockConnectorRequest) (*UnlockConnectorResponse, *OCPPError)
-type UpdateFirmwareCallback func(ctx *OCPPContext, request UpdateFirmwareRequest) (*UpdateFirmwareResponse, *OCPPError)
+type AuthorizeCallback func(ctx *Context, request AuthorizeRequest) (*AuthorizeResponse, *Error)
+type BootNotificationCallback func(ctx *Context, request BootNotificationRequest) (*BootNotificationResponse, *Error)
+type CancelReservationCallback func(ctx *Context, request CancelReservationRequest) (*CancelReservationResponse, *Error)
+type CertificateSignedCallback func(ctx *Context, request CertificateSignedRequest) (*CertificateSignedResponse, *Error)
+type ChangeAvailabilityCallback func(ctx *Context, request ChangeAvailabilityRequest) (*ChangeAvailabilityResponse, *Error)
+type ChangeConfigurationCallback func(ctx *Context, request ChangeConfigurationRequest) (*ChangeConfigurationResponse, *Error)
+type ClearCacheCallback func(ctx *Context, request ClearCacheRequest) (*ClearCacheResponse, *Error)
+type ClearChargingProfileCallback func(ctx *Context, request ClearChargingProfileRequest) (*ClearChargingProfileResponse, *Error)
+type ClearReservationCallback func(ctx *Context, request CancelReservationRequest) (*CancelReservationResponse, *Error)
+type DataTransferCallback func(ctx *Context, request DataTransferRequest) (*DataTransferResponse, *Error)
+type DeleteCertificateCallback func(ctx *Context, request DeleteCertificateRequest) (*DeleteCertificateResponse, *Error)
+type DiagnosticsStatusNotificationCallback func(ctx *Context, request DiagnosticsStatusNotificationRequest) (*DiagnosticsStatusNotificationResponse, *Error)
+type ExtendedTriggerMessageCallback func(ctx *Context, request ExtendedTriggerMessageRequest) (*ExtendedTriggerMessageResponse, *Error)
+type GetCompositeScheduleCallback func(ctx *Context, request GetCompositeScheduleRequest) (*GetCompositeScheduleResponse, *Error)
+type GetConfigurationCallback func(ctx *Context, request GetConfigurationRequest) (*GetConfigurationResponse, *Error)
+type GetDiagnosticsCallback func(ctx *Context, request GetDiagnosticsRequest) (*GetDiagnosticsResponse, *Error)
+type GetInstalledCertificatesCallback func(ctx *Context, request GetInstalledCertificateIdsRequest) (*GetInstalledCertificateIdsResponse, *Error)
+type GetLogCallback func(ctx *Context, request GetLogRequest) (*GetLogResponse, *Error)
+type HeartbeatCallback func(ctx *Context, request HeartbeatRequest) (*HeartbeatResponse, *Error)
+type InstallCertificateCallback func(ctx *Context, request InstallCertificateRequest) (*InstallCertificateResponse, *Error)
+type LogStatusNotificationCallback func(ctx *Context, request LogStatusNotificationRequest) (*LogStatusNotificationResponse, *Error)
+type MeterValuesCallback func(ctx *Context, request MeterValuesRequest) (*MeterValuesResponse, *Error)
+type RemoteStartTransactionCallback func(ctx *Context, request RemoteStartTransactionRequest) (*RemoteStartTransactionResponse, *Error)
+type RemoteStopTransactionCallback func(ctx *Context, request RemoteStopTransactionRequest) (*RemoteStopTransactionResponse, *Error)
+type ReserveNowCallback func(ctx *Context, request ReserveNowRequest) (*ReserveNowResponse, *Error)
+type ResetCallback func(ctx *Context, request ResetRequest) (*ResetResponse, *Error)
+type SendLocalListCallback func(ctx *Context, request SendLocalListRequest) (*SendLocalListResponse, *Error)
+type SetChargingProfileCallback func(ctx *Context, request SetChargingProfileRequest) (*SetChargingProfileResponse, *Error)
+type SignCertificateCallback func(ctx *Context, request SignCertificateRequest) (*SignCertificateResponse, *Error)
+type SignedFirmwareStatusNotificationCallback func(ctx *Context, request SignedFirmwareStatusNotificationRequest) (*SignedFirmwareStatusNotificationResponse, *Error)
+type SignedUpdateFirmwareCallback func(ctx *Context, request SignedUpdateFirmwareRequest) (*SignedUpdateFirmwareResponse, *Error)
+type StartTransactionCallback func(ctx *Context, request StartTransactionRequest) (*StartTransactionResponse, *Error)
+type StatusNotificationCallback func(ctx *Context, request StatusNotificationRequest) (*StatusNotificationResponse, *Error)
+type StopTransactionCallback func(ctx *Context, request StopTransactionRequest) (*StopTransactionResponse, *Error)
+type TriggerMessageCallback func(ctx *Context, request TriggerMessageRequest) (*TriggerMessageResponse, *Error)
+type UnlockConnectorCallback func(ctx *Context, request UnlockConnectorRequest) (*UnlockConnectorResponse, *Error)
+type UpdateFirmwareCallback func(ctx *Context, request UpdateFirmwareRequest) (*UpdateFirmwareResponse, *Error)
 
-type OCPPCallbacks struct {
+type Callbacks struct {
 	handlers map[Action]callHandler
 
 	Authorize                        AuthorizeCallback
@@ -98,7 +98,7 @@ type OCPPCallbacks struct {
 	UpdateFirmware                   UpdateFirmwareCallback
 }
 
-func (o *OCPPCallbacks) InitHandlers() {
+func (o *Callbacks) InitHandlers() {
 	o.handlers = map[Action]callHandler{
 		ActionAuthorize:                        newCallHandler[AuthorizeRequest, AuthorizeResponse](o.Authorize),
 		ActionBootNotification:                 newCallHandler[BootNotificationRequest, BootNotificationResponse](o.BootNotification),
@@ -142,7 +142,7 @@ func (o *OCPPCallbacks) InitHandlers() {
 	}
 }
 
-func newCallHandler[Req any, Resp any](callback func(*OCPPContext, Req) (*Resp, *OCPPError)) callHandler {
+func newCallHandler[Req any, Resp any](callback func(*Context, Req) (*Resp, *Error)) callHandler {
 	var req Req
 	var resp Resp
 	var cb any

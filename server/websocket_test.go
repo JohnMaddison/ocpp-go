@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/johnmaddison/ocpp-go"
 	"github.com/johnmaddison/ocpp-go/ocpp16"
-	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,8 +26,8 @@ func TestWshandler_BootNotification(t *testing.T) {
 				connectedChargePointID = info.ChargePointID
 			},
 		},
-		ocppCallbacks: ocpp16.OCPPCallbacks{
-			BootNotification: func(ctx *ocpp16.OCPPContext, request ocpp16.BootNotificationRequest) (*ocpp16.BootNotificationResponse, *ocpp16.OCPPError) {
+		ocppCallbacks: ocpp16.Callbacks{
+			BootNotification: func(ctx *ocpp16.Context, request ocpp16.BootNotificationRequest) (*ocpp16.BootNotificationResponse, *ocpp16.Error) {
 				t.Log("BootNotification callback triggered")
 				calledBootNotification = true
 				return &ocpp16.BootNotificationResponse{

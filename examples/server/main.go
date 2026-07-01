@@ -42,13 +42,13 @@ func main() {
 
 	opts := []server.Option{
 		server.WithPath("ocpp"),
-		server.WithOCPP16AuthorizeHandler(authorizeHandler),
-		server.WithOCPP16BootNotificationHandler(bootNotificationHandler),
-		server.WithOCPP16HeartbeatHandler(heartbeatHandler),
-		server.WithOCPP16MeterValuesHandler(meterValuesHandler),
-		server.WithOCPP16StartTransactionHandler(startTransactionHandler),
-		server.WithOCPP16StatusNotificationHandler(statusNotificationHandler),
-		server.WithOCPP16StopTransactionHandler(stopTransactionHandler),
+		server.With16AuthorizeHandler(authorizeHandler),
+		server.With16BootNotificationHandler(bootNotificationHandler),
+		server.With16HeartbeatHandler(heartbeatHandler),
+		server.With16MeterValuesHandler(meterValuesHandler),
+		server.With16StartTransactionHandler(startTransactionHandler),
+		server.With16StatusNotificationHandler(statusNotificationHandler),
+		server.With16StopTransactionHandler(stopTransactionHandler),
 		server.WithConnectRequestHandler(ConnectHandler),
 		server.WithConnectedHandler(ConnectedHandler),
 		server.WithDisconnectHandler(DisconnectHandler),
@@ -102,7 +102,7 @@ func DisconnectHandler(info ocpp.ConnectionInfo) {
 	log.Printf("Disconnected: %s", info.ChargePointID)
 }
 
-func bootNotificationHandler(ctx *ocpp16.OCPPContext, request ocpp16.BootNotificationRequest) (*ocpp16.BootNotificationResponse, *ocpp16.OCPPError) {
+func bootNotificationHandler(ctx *ocpp16.Context, request ocpp16.BootNotificationRequest) (*ocpp16.BootNotificationResponse, *ocpp16.Error) {
 	log.Printf("Bootnotifcation received from charge point: %s %+v\n",
 		ctx.ChargePointID, request)
 
@@ -132,7 +132,7 @@ func bootNotificationHandler(ctx *ocpp16.OCPPContext, request ocpp16.BootNotific
 	}, nil
 }
 
-func heartbeatHandler(ctx *ocpp16.OCPPContext, request ocpp16.HeartbeatRequest) (*ocpp16.HeartbeatResponse, *ocpp16.OCPPError) {
+func heartbeatHandler(ctx *ocpp16.Context, request ocpp16.HeartbeatRequest) (*ocpp16.HeartbeatResponse, *ocpp16.Error) {
 	//log.Printf("Heartbeat received from charge point: %s %+v\n", ctx.ChargePointID, request)
 
 	return &ocpp16.HeartbeatResponse{
@@ -140,23 +140,23 @@ func heartbeatHandler(ctx *ocpp16.OCPPContext, request ocpp16.HeartbeatRequest) 
 	}, nil
 }
 
-func statusNotificationHandler(ctx *ocpp16.OCPPContext, request ocpp16.StatusNotificationRequest) (*ocpp16.StatusNotificationResponse, *ocpp16.OCPPError) {
+func statusNotificationHandler(ctx *ocpp16.Context, request ocpp16.StatusNotificationRequest) (*ocpp16.StatusNotificationResponse, *ocpp16.Error) {
 	//log.Printf("StatusNotification received from charge point: %s %+v\n", ctx.ChargePointID, request)
 	return &ocpp16.StatusNotificationResponse{}, nil
 }
 
-func authorizeHandler(ctx *ocpp16.OCPPContext, request ocpp16.AuthorizeRequest) (*ocpp16.AuthorizeResponse, *ocpp16.OCPPError) {
+func authorizeHandler(ctx *ocpp16.Context, request ocpp16.AuthorizeRequest) (*ocpp16.AuthorizeResponse, *ocpp16.Error) {
 	return &ocpp16.AuthorizeResponse{IDTagInfo: ocpp16.IDTagInfo{Status: ocpp16.AuthorizationStatusAccepted}}, nil
 }
 
-func startTransactionHandler(ctx *ocpp16.OCPPContext, request ocpp16.StartTransactionRequest) (*ocpp16.StartTransactionResponse, *ocpp16.OCPPError) {
+func startTransactionHandler(ctx *ocpp16.Context, request ocpp16.StartTransactionRequest) (*ocpp16.StartTransactionResponse, *ocpp16.Error) {
 	return &ocpp16.StartTransactionResponse{IDTagInfo: ocpp16.IDTagInfo{Status: ocpp16.AuthorizationStatusAccepted}, TransactionID: 10000}, nil
 }
 
-func meterValuesHandler(ctx *ocpp16.OCPPContext, request ocpp16.MeterValuesRequest) (*ocpp16.MeterValuesResponse, *ocpp16.OCPPError) {
+func meterValuesHandler(ctx *ocpp16.Context, request ocpp16.MeterValuesRequest) (*ocpp16.MeterValuesResponse, *ocpp16.Error) {
 	return &ocpp16.MeterValuesResponse{}, nil
 }
 
-func stopTransactionHandler(ctx *ocpp16.OCPPContext, request ocpp16.StopTransactionRequest) (*ocpp16.StopTransactionResponse, *ocpp16.OCPPError) {
+func stopTransactionHandler(ctx *ocpp16.Context, request ocpp16.StopTransactionRequest) (*ocpp16.StopTransactionResponse, *ocpp16.Error) {
 	return &ocpp16.StopTransactionResponse{IDTagInfo: &ocpp16.IDTagInfo{Status: ocpp16.AuthorizationStatusAccepted}}, nil
 }

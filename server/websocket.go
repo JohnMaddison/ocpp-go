@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/johnmaddison/ocpp-go"
 	"github.com/johnmaddison/ocpp-go/internal/ws"
 	"github.com/johnmaddison/ocpp-go/ocpp16"
 	"github.com/johnmaddison/ocpp-go/ocpp21"
-	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{Subprotocols: []string{"ocpp1.6"}, ReadBufferSize: 2048,
@@ -120,7 +120,7 @@ func hasNegotiableSubprotocol(r *http.Request, supported []string) bool {
 func (o *Server) runtime(cpid, protocol string, remoteAddr, localAddr net.Addr) (ws.Runtime, *Session, bool) {
 	switch protocol {
 	case "ocpp1.6":
-		context := ocpp16.NewOCPPContextWithMessageIDGenerator(cpid, o.messageIDGenerator)
+		context := ocpp16.NewContextWithMessageIDGenerator(cpid, o.messageIDGenerator)
 		session := &Session{
 			chargePointID: cpid,
 			protocol:      protocol,
@@ -144,7 +144,7 @@ func (o *Server) runtime(cpid, protocol string, remoteAddr, localAddr net.Addr) 
 			},
 		}, session, true
 	case "ocpp2.1":
-		context := ocpp21.NewOCPPContextWithMessageIDGenerator(cpid, o.messageIDGenerator)
+		context := ocpp21.NewContextWithMessageIDGenerator(cpid, o.messageIDGenerator)
 		session := &Session{
 			chargePointID: cpid,
 			protocol:      protocol,

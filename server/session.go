@@ -16,8 +16,8 @@ type Session struct {
 	protocol      string
 	remoteAddr    net.Addr
 	localAddr     net.Addr
-	ocpp16Context *ocpp16.OCPPContext
-	ocpp21Context *ocpp21.OCPPContext
+	ocpp16Context *ocpp16.Context
+	ocpp21Context *ocpp21.Context
 }
 
 // Session returns the currently addressable session for a charge point ID.
@@ -48,74 +48,74 @@ func (s *Session) LocalAddr() net.Addr {
 	return s.localAddr
 }
 
-// OCPP16Context returns the OCPP 1.6 context for this session, if applicable.
-func (s *Session) OCPP16Context() (*ocpp16.OCPPContext, bool) {
+// Context16 returns the OCPP 1.6 context for this session, if applicable.
+func (s *Session) Context16() (*ocpp16.Context, bool) {
 	return s.ocpp16Context, s.ocpp16Context != nil
 }
 
-// OCPP21Context returns the OCPP 2.1 context for this session, if applicable.
-func (s *Session) OCPP21Context() (*ocpp21.OCPPContext, bool) {
+// Context21 returns the OCPP 2.1 context for this session, if applicable.
+func (s *Session) Context21() (*ocpp21.Context, bool) {
 	return s.ocpp21Context, s.ocpp21Context != nil
 }
 
-// SendOCPP16 sends an OCPP 1.6 CALL to the connected charge point.
-func (s *Session) SendOCPP16(call ocpp.Call) (*ocpp16.ResultOrError, error) {
+// Send16 sends an OCPP 1.6 CALL to the connected charge point.
+func (s *Session) Send16(call ocpp.Call) (*ocpp16.ResultOrError, error) {
 	if s.ocpp16Context == nil {
 		return nil, s.wrongProtocolError("ocpp1.6")
 	}
 	return s.ocpp16Context.Send(call)
 }
 
-// SendOCPP16Call sends a typed OCPP 1.6 CALL to the connected charge point.
-func (s *Session) SendOCPP16Call(action ocpp16.Action, payload any) (*ocpp16.ResultOrError, error) {
+// Send16Call sends a typed OCPP 1.6 CALL to the connected charge point.
+func (s *Session) Send16Call(action ocpp16.Action, payload any) (*ocpp16.ResultOrError, error) {
 	if s.ocpp16Context == nil {
 		return nil, s.wrongProtocolError("ocpp1.6")
 	}
 	return s.ocpp16Context.SendCall(action, payload)
 }
 
-// SendOCPP16WithContext sends an OCPP 1.6 CALL with context cancellation.
-func (s *Session) SendOCPP16WithContext(ctx context.Context, call ocpp.Call) (*ocpp16.ResultOrError, error) {
+// Send16WithContext sends an OCPP 1.6 CALL with context cancellation.
+func (s *Session) Send16WithContext(ctx context.Context, call ocpp.Call) (*ocpp16.ResultOrError, error) {
 	if s.ocpp16Context == nil {
 		return nil, s.wrongProtocolError("ocpp1.6")
 	}
 	return s.ocpp16Context.SendWithContext(ctx, call)
 }
 
-// SendOCPP16CallWithContext sends a typed OCPP 1.6 CALL with context cancellation.
-func (s *Session) SendOCPP16CallWithContext(ctx context.Context, action ocpp16.Action, payload any) (*ocpp16.ResultOrError, error) {
+// Send16CallWithContext sends a typed OCPP 1.6 CALL with context cancellation.
+func (s *Session) Send16CallWithContext(ctx context.Context, action ocpp16.Action, payload any) (*ocpp16.ResultOrError, error) {
 	if s.ocpp16Context == nil {
 		return nil, s.wrongProtocolError("ocpp1.6")
 	}
 	return s.ocpp16Context.SendCallWithContext(ctx, action, payload)
 }
 
-// SendOCPP21 sends an OCPP 2.1 CALL to the connected charge point.
-func (s *Session) SendOCPP21(call ocpp.Call) (*ocpp21.ResultOrError, error) {
+// Send21 sends an OCPP 2.1 CALL to the connected charge point.
+func (s *Session) Send21(call ocpp.Call) (*ocpp21.ResultOrError, error) {
 	if s.ocpp21Context == nil {
 		return nil, s.wrongProtocolError("ocpp2.1")
 	}
 	return s.ocpp21Context.Send(call)
 }
 
-// SendOCPP21Call sends a typed OCPP 2.1 CALL to the connected charge point.
-func (s *Session) SendOCPP21Call(action ocpp21.Action, payload any) (*ocpp21.ResultOrError, error) {
+// Send21Call sends a typed OCPP 2.1 CALL to the connected charge point.
+func (s *Session) Send21Call(action ocpp21.Action, payload any) (*ocpp21.ResultOrError, error) {
 	if s.ocpp21Context == nil {
 		return nil, s.wrongProtocolError("ocpp2.1")
 	}
 	return s.ocpp21Context.SendCall(action, payload)
 }
 
-// SendOCPP21WithContext sends an OCPP 2.1 CALL with context cancellation.
-func (s *Session) SendOCPP21WithContext(ctx context.Context, call ocpp.Call) (*ocpp21.ResultOrError, error) {
+// Send21WithContext sends an OCPP 2.1 CALL with context cancellation.
+func (s *Session) Send21WithContext(ctx context.Context, call ocpp.Call) (*ocpp21.ResultOrError, error) {
 	if s.ocpp21Context == nil {
 		return nil, s.wrongProtocolError("ocpp2.1")
 	}
 	return s.ocpp21Context.SendWithContext(ctx, call)
 }
 
-// SendOCPP21CallWithContext sends a typed OCPP 2.1 CALL with context cancellation.
-func (s *Session) SendOCPP21CallWithContext(ctx context.Context, action ocpp21.Action, payload any) (*ocpp21.ResultOrError, error) {
+// Send21CallWithContext sends a typed OCPP 2.1 CALL with context cancellation.
+func (s *Session) Send21CallWithContext(ctx context.Context, action ocpp21.Action, payload any) (*ocpp21.ResultOrError, error) {
 	if s.ocpp21Context == nil {
 		return nil, s.wrongProtocolError("ocpp2.1")
 	}
