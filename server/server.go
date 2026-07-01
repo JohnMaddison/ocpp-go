@@ -42,7 +42,7 @@ type Server struct {
 	// Websocket keepalive options
 	pingInterval       time.Duration
 	pongTimeout        time.Duration
-	messageIdGenerator uuidgenerator.MessageIdGeneratorMethod
+	messageIDGenerator uuidgenerator.MessageIDGeneratorMethod
 }
 
 // Option configures a Server.
@@ -55,7 +55,7 @@ func NewServer(address string, opts ...Option) *Server {
 		path:               "ocpp",
 		activeWebsockets:   make(map[*websocket.Conn]struct{}),
 		sessions:           make(map[string]*Session),
-		messageIdGenerator: uuidgenerator.DefaultUUIDGenerator,
+		messageIDGenerator: uuidgenerator.DefaultUUIDGenerator,
 	}
 	for _, opt := range opts {
 		opt(s)
@@ -153,10 +153,10 @@ func WithWebsocketKeepalive(interval, pongTimeout time.Duration) Option {
 // WithKeepaliveLogging enables logging of websocket ping/pong frames.
 func WithKeepaliveLogging() Option { return func(s *Server) { s.logKeepalive = true } }
 
-func WithMessageIdGenerator(f func() string) Option {
+func WithMessageIDGenerator(f func() string) Option {
 	return func(s *Server) {
 		if f != nil {
-			s.messageIdGenerator = f
+			s.messageIDGenerator = f
 		}
 	}
 }

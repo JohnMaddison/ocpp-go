@@ -25,7 +25,7 @@ func TestServerSessionMissing(t *testing.T) {
 func TestServerSessionSendOCPP16(t *testing.T) {
 	srv := NewServer(":0",
 		WithOCPP16Callbacks(ocpp16.OCPPCallbacks{}),
-		WithMessageIdGenerator(func() string { return "server-16" }),
+		WithMessageIDGenerator(func() string { return "server-16" }),
 	)
 	testServer := newSessionTestServer(srv)
 	defer testServer.Close()
@@ -83,7 +83,7 @@ func TestServerSessionSendOCPP16(t *testing.T) {
 func TestServerSessionSendOCPP21(t *testing.T) {
 	srv := NewServer(":0",
 		WithOCPP21Callbacks(ocpp21.OCPPCallbacks{}),
-		WithMessageIdGenerator(func() string { return "server-21" }),
+		WithMessageIDGenerator(func() string { return "server-21" }),
 	)
 	testServer := newSessionTestServer(srv)
 	defer testServer.Close()

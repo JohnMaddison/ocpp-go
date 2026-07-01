@@ -13,14 +13,14 @@ type OCPPContext struct {
 	ChargePointID      string
 	Queue              chan Request
 	storage            *CircularBuffer
-	messageIdGenerator uuidgenerator.MessageIdGeneratorMethod
+	messageIDGenerator uuidgenerator.MessageIDGeneratorMethod
 }
 
 func NewOCPPContext(chargePointID string) *OCPPContext {
-	return NewOCPPContextWithMessageIdGenerator(chargePointID, nil)
+	return NewOCPPContextWithMessageIDGenerator(chargePointID, nil)
 }
 
-func NewOCPPContextWithMessageIdGenerator(chargePointID string, generator func() string) *OCPPContext {
+func NewOCPPContextWithMessageIDGenerator(chargePointID string, generator func() string) *OCPPContext {
 	capacity := 10
 	if generator == nil {
 		generator = uuidgenerator.DefaultUUIDGenerator
@@ -29,7 +29,7 @@ func NewOCPPContextWithMessageIdGenerator(chargePointID string, generator func()
 		ChargePointID:      chargePointID,
 		Queue:              make(chan Request, capacity),
 		storage:            NewCircularBuffer(capacity),
-		messageIdGenerator: generator,
+		messageIDGenerator: generator,
 	}
 }
 
@@ -77,7 +77,7 @@ func (s *OCPPContext) SendCallWithContext(ctx context.Context, action Action, pa
 
 func (s *OCPPContext) SendWithContext(ctx context.Context, call ocpp.Call) (*ResultOrError, error) {
 	if call.MessageID == "" {
-		call.MessageID = s.messageIdGenerator()
+		call.MessageID = s.messageIDGenerator()
 	}
 	msg := Request{
 		Call:   call,
@@ -100,7 +100,7 @@ func (s *OCPPContext) SendWithContext(ctx context.Context, call ocpp.Call) (*Res
 }
 
 func (s *OCPPContext) SendCallAndExpectResult(action string, payload any) (*ocpp.CallResult, error) {
-	call := &ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: s.messageIdGenerator(), Action: action, Payload: payload}
+	call := &ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: s.messageIDGenerator(), Action: action, Payload: payload}
 	request, err := s.Send(*call)
 
 	if err != nil {

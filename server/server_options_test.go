@@ -10,19 +10,19 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestServerUsesDefaultMessageIdGenerator(t *testing.T) {
+func TestServerUsesDefaultMessageIDGenerator(t *testing.T) {
 	s := NewServer(":0")
-	if s.messageIdGenerator == nil {
+	if s.messageIDGenerator == nil {
 		t.Fatal("expected default message ID generator")
 	}
-	if _, err := uuid.Parse(s.messageIdGenerator()); err != nil {
+	if _, err := uuid.Parse(s.messageIDGenerator()); err != nil {
 		t.Fatalf("expected UUID message ID, got error: %v", err)
 	}
 }
 
-func TestServerMessageIdGeneratorCanBeOverridden(t *testing.T) {
-	s := NewServer(":0", WithMessageIdGenerator(func() string { return "custom-id" }))
-	if got := s.messageIdGenerator(); got != "custom-id" {
+func TestServerMessageIDGeneratorCanBeOverridden(t *testing.T) {
+	s := NewServer(":0", WithMessageIDGenerator(func() string { return "custom-id" }))
+	if got := s.messageIDGenerator(); got != "custom-id" {
 		t.Fatalf("expected custom-id, got %q", got)
 	}
 }

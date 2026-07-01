@@ -9,8 +9,8 @@ import (
 	"github.com/JohnMaddison/ocpp-go"
 )
 
-func TestSendWithContextUsesMessageIdGeneratorWhenMissing(t *testing.T) {
-	ctx := NewOCPPContextWithMessageIdGenerator("CP_1", func() string { return "custom-id" })
+func TestSendWithContextUsesMessageIDGeneratorWhenMissing(t *testing.T) {
+	ctx := NewOCPPContextWithMessageIDGenerator("CP_1", func() string { return "custom-id" })
 
 	go func() {
 		request := <-ctx.Queue
@@ -29,7 +29,7 @@ func TestSendWithContextUsesMessageIdGeneratorWhenMissing(t *testing.T) {
 }
 
 func TestSendCallBuildsTypedCall(t *testing.T) {
-	ctx := NewOCPPContextWithMessageIdGenerator("CP_1", func() string { return "custom-id" })
+	ctx := NewOCPPContextWithMessageIDGenerator("CP_1", func() string { return "custom-id" })
 	payload := DataTransferRequest{VendorID: "vendor"}
 
 	go func() {

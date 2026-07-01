@@ -56,7 +56,7 @@ func (c *Client) Connect() error {
 func (c *Client) runtime() (ws.Runtime, error) {
 	switch c.subprotocol {
 	case "ocpp1.6":
-		c.OCPPContext = ocpp16.NewOCPPContextWithMessageIdGenerator(c.chargePointID, c.messageIdGenerator)
+		c.OCPPContext = ocpp16.NewOCPPContextWithMessageIDGenerator(c.chargePointID, c.messageIDGenerator)
 		return ws.Runtime{
 			ChargePointID: c.OCPPContext.ChargePointID,
 			OutgoingCalls: requestChannel[ocpp16.Request](c.OCPPContext.Queue),
@@ -69,7 +69,7 @@ func (c *Client) runtime() (ws.Runtime, error) {
 			},
 		}, nil
 	case "ocpp2.1":
-		c.OCPP21Context = ocpp21.NewOCPPContextWithMessageIdGenerator(c.chargePointID, c.messageIdGenerator)
+		c.OCPP21Context = ocpp21.NewOCPPContextWithMessageIDGenerator(c.chargePointID, c.messageIDGenerator)
 		return ws.Runtime{
 			ChargePointID: c.OCPP21Context.ChargePointID,
 			OutgoingCalls: requestChannel[ocpp21.Request](c.OCPP21Context.Queue),

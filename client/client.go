@@ -25,7 +25,7 @@ type Client struct {
 	password           string
 	pingInterval       time.Duration
 	pongTimeout        time.Duration
-	messageIdGenerator uuidgenerator.MessageIdGeneratorMethod
+	messageIDGenerator uuidgenerator.MessageIDGeneratorMethod
 }
 
 func NewOCPP16Client(chargePointID, address string) *Client {
@@ -34,7 +34,7 @@ func NewOCPP16Client(chargePointID, address string) *Client {
 		address:            address,
 		OCPPContext:        nil,
 		subprotocol:        "ocpp1.6",
-		messageIdGenerator: uuidgenerator.DefaultUUIDGenerator,
+		messageIDGenerator: uuidgenerator.DefaultUUIDGenerator,
 	}
 	client.ocppCallbacks.InitHandlers()
 	return client
@@ -46,7 +46,7 @@ func NewOCPP21Client(chargePointID, address string) *Client {
 		address:            address,
 		OCPP21Context:      nil,
 		subprotocol:        "ocpp2.1",
-		messageIdGenerator: uuidgenerator.DefaultUUIDGenerator,
+		messageIDGenerator: uuidgenerator.DefaultUUIDGenerator,
 	}
 	client.ocpp21Callbacks.InitHandlers()
 	return client
@@ -64,9 +64,9 @@ func (c *Client) WithKeepaliveLogging() *Client {
 	return c
 }
 
-func (c *Client) WithMessageIdGenerator(f func() string) *Client {
+func (c *Client) WithMessageIDGenerator(f func() string) *Client {
 	if f != nil {
-		c.messageIdGenerator = f
+		c.messageIDGenerator = f
 	}
 	return c
 }

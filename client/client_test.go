@@ -39,25 +39,25 @@ func TestVersionedConstructorsSelectSingleSubprotocol(t *testing.T) {
 	}
 }
 
-func TestClientConstructorsUseDefaultMessageIdGenerator(t *testing.T) {
+func TestClientConstructorsUseDefaultMessageIDGenerator(t *testing.T) {
 	for _, c := range []*Client{
 		NewOCPP16Client("CP_1", "ws://127.0.0.1:9001/ocpp"),
 		NewOCPP21Client("CP_1", "ws://127.0.0.1:9001/ocpp"),
 	} {
-		if c.messageIdGenerator == nil {
+		if c.messageIDGenerator == nil {
 			t.Fatal("expected default message ID generator")
 		}
-		if _, err := uuid.Parse(c.messageIdGenerator()); err != nil {
+		if _, err := uuid.Parse(c.messageIDGenerator()); err != nil {
 			t.Fatalf("expected UUID message ID, got error: %v", err)
 		}
 	}
 }
 
-func TestClientMessageIdGeneratorCanBeOverridden(t *testing.T) {
+func TestClientMessageIDGeneratorCanBeOverridden(t *testing.T) {
 	c := NewOCPP16Client("CP_1", "ws://127.0.0.1:9001/ocpp").
-		WithMessageIdGenerator(func() string { return "custom-id" })
+		WithMessageIDGenerator(func() string { return "custom-id" })
 
-	if got := c.messageIdGenerator(); got != "custom-id" {
+	if got := c.messageIDGenerator(); got != "custom-id" {
 		t.Fatalf("expected custom-id, got %q", got)
 	}
 }

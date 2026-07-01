@@ -120,7 +120,7 @@ func hasNegotiableSubprotocol(r *http.Request, supported []string) bool {
 func (o *Server) runtime(cpid, protocol string, remoteAddr, localAddr net.Addr) (ws.Runtime, *Session, bool) {
 	switch protocol {
 	case "ocpp1.6":
-		context := ocpp16.NewOCPPContextWithMessageIdGenerator(cpid, o.messageIdGenerator)
+		context := ocpp16.NewOCPPContextWithMessageIDGenerator(cpid, o.messageIDGenerator)
 		session := &Session{
 			chargePointID: cpid,
 			protocol:      protocol,
@@ -144,7 +144,7 @@ func (o *Server) runtime(cpid, protocol string, remoteAddr, localAddr net.Addr) 
 			},
 		}, session, true
 	case "ocpp2.1":
-		context := ocpp21.NewOCPPContextWithMessageIdGenerator(cpid, o.messageIdGenerator)
+		context := ocpp21.NewOCPPContextWithMessageIDGenerator(cpid, o.messageIDGenerator)
 		session := &Session{
 			chargePointID: cpid,
 			protocol:      protocol,
