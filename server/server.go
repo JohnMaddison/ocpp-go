@@ -2,8 +2,10 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/JohnMaddison/ocpp-go"
@@ -12,8 +14,10 @@ import (
 )
 
 type Server struct {
+	mu              sync.Mutex
 	address         string
 	path            string
+	httpServer      *http.Server
 	ocppCallbacks   ocpp16.OCPPCallbacks
 	ocpp21Callbacks ocpp21.OCPPCallbacks
 	socketCallbacks ocpp.SocketCallbacks
@@ -170,14 +174,39 @@ func (s *Server) Serve() error {
 
 		s.parser = s.ocppCallbacks.ParseMessage
 	}
-	http.HandleFunc(fmt.Sprintf("/%s/{cpid}", s.path), func(w http.ResponseWriter, r *http.Request) {
+
+	mux := http.NewServeMux()
+	mux.HandleFunc(fmt.Sprintf("/%s/{cpid}", s.path), func(w http.ResponseWriter, r *http.Request) {
 		s.wshandler(w, r)
 	})
-	if s.tlsEnabled {
-		return http.ListenAndServeTLS(s.address, s.tlsCert, s.tlsKey, nil)
+
+	httpServer := &http.Server{
+		Addr:    s.address,
+		Handler: mux,
 	}
-	return http.ListenAndServe(s.address, nil)
+	s.mu.Lock()
+	s.httpServer = httpServer
+	s.mu.Unlock()
+
+	if s.tlsEnabled {
+		return httpServer.ListenAndServeTLS(s.tlsCert, s.tlsKey)
+	}
+	return httpServer.ListenAndServe()
 }
 
 // ListenAndServe starts the server after setting the URL base path.
 func (s *Server) ListenAndServe(path string) error { s.path = path; return s.Serve() }
+
+// Shutdown gracefully shuts down the underlying HTTP server.
+//
+// Shutdown stops accepting new connections and waits for active HTTP handlers to
+// return until ctx expires, matching net/http.Server.Shutdown semantics.
+func (s *Server) Shutdown(ctx context.Context) error {
+	s.mu.Lock()
+	httpServer := s.httpServer
+	s.mu.Unlock()
+	if httpServer == nil {
+		return http.ErrServerClosed
+	}
+	return httpServer.Shutdown(ctx)
+}
