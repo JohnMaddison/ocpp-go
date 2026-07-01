@@ -1,7 +1,7 @@
 package ocpp16
 
 import (
-	"github.com/JohnMaddison/ocpp-go/internal/cbuf"
+	"github.com/johnmaddison/ocpp-go/internal/cbuf"
 )
 
 // CircularBuffer is a thin adapter over an internal generic buffer

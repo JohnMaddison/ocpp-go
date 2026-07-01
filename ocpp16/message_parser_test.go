@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/JohnMaddison/ocpp-go"
+	"github.com/johnmaddison/ocpp-go"
 )
 
 func TestParseMessage_BootNotificationCall(t *testing.T) {

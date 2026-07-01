@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/JohnMaddison/ocpp-go"
-	"github.com/JohnMaddison/ocpp-go/internal/uuidgenerator"
-	"github.com/JohnMaddison/ocpp-go/ocpp16"
-	"github.com/JohnMaddison/ocpp-go/ocpp21"
+	"github.com/johnmaddison/ocpp-go"
+	"github.com/johnmaddison/ocpp-go/internal/uuidgenerator"
+	"github.com/johnmaddison/ocpp-go/ocpp16"
+	"github.com/johnmaddison/ocpp-go/ocpp21"
 	"github.com/gorilla/websocket"
 )
 

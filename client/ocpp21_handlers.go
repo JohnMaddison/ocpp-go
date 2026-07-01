@@ -1,6 +1,6 @@
 package client
 
-import "github.com/JohnMaddison/ocpp-go/ocpp21"
+import "github.com/johnmaddison/ocpp-go/ocpp21"
 
 func (c *Client) WithOCPP21AFRRSignalHandler(callback ocpp21.AFRRSignalCallback) *Client {
 	c.ocpp21Callbacks.AFRRSignal = callback

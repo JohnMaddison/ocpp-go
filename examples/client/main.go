@@ -11,9 +11,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/JohnMaddison/ocpp-go"
-	"github.com/JohnMaddison/ocpp-go/client"
-	"github.com/JohnMaddison/ocpp-go/ocpp16"
+	"github.com/johnmaddison/ocpp-go"
+	"github.com/johnmaddison/ocpp-go/client"
+	"github.com/johnmaddison/ocpp-go/ocpp16"
 )
 
 // var debug = flag.Bool("debug", false, "enable debug logging")

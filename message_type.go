@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/JohnMaddison/ocpp-go/internal/uuidgenerator"
+	"github.com/johnmaddison/ocpp-go/internal/uuidgenerator"
 )
 
 // MessageType constants define the type of the OCPP message.

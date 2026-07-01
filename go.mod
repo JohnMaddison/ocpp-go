@@ -1,4 +1,4 @@
-module github.com/JohnMaddison/ocpp-go
+module github.com/johnmaddison/ocpp-go
 
 go 1.26.4
 

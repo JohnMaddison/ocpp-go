@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/JohnMaddison/ocpp-go"
-	"github.com/JohnMaddison/ocpp-go/internal/uuidgenerator"
+	"github.com/johnmaddison/ocpp-go"
+	"github.com/johnmaddison/ocpp-go/internal/uuidgenerator"
 )
 
 type OCPPContext struct {

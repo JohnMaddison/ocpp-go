@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/JohnMaddison/ocpp-go"
+	"github.com/johnmaddison/ocpp-go"
 	"github.com/gorilla/websocket"
 )
 

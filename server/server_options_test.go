@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/JohnMaddison/ocpp-go/ocpp16"
-	"github.com/JohnMaddison/ocpp-go/ocpp21"
+	"github.com/johnmaddison/ocpp-go/ocpp16"
+	"github.com/johnmaddison/ocpp-go/ocpp21"
 	"github.com/google/uuid"
 )
 

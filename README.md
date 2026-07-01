@@ -1,6 +1,6 @@
 # ocpp-go
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/JohnMaddison/ocpp-go.svg)](https://pkg.go.dev/github.com/JohnMaddison/ocpp-go)
+[![Go Reference](https://pkg.go.dev/badge/github.com/johnmaddison/ocpp-go.svg)](https://pkg.go.dev/github.com/johnmaddison/ocpp-go)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A Go library for building Open Charge Point Protocol (OCPP) clients and central systems.
@@ -24,18 +24,18 @@ Current protocol support:
 ## Installation
 
 ```sh
-go get github.com/JohnMaddison/ocpp-go
+go get github.com/johnmaddison/ocpp-go
 ```
 
 Import the packages you need:
 
 ```go
 import (
-	"github.com/JohnMaddison/ocpp-go"
-	"github.com/JohnMaddison/ocpp-go/client"
-	"github.com/JohnMaddison/ocpp-go/ocpp16"
-	"github.com/JohnMaddison/ocpp-go/ocpp21"
-	"github.com/JohnMaddison/ocpp-go/server"
+	"github.com/johnmaddison/ocpp-go"
+	"github.com/johnmaddison/ocpp-go/client"
+	"github.com/johnmaddison/ocpp-go/ocpp16"
+	"github.com/johnmaddison/ocpp-go/ocpp21"
+	"github.com/johnmaddison/ocpp-go/server"
 )
 ```
 

@@ -1,6 +1,6 @@
 package client
 
-import "github.com/JohnMaddison/ocpp-go/ocpp16"
+import "github.com/johnmaddison/ocpp-go/ocpp16"
 
 func (c *Client) WithOCPP16AuthorizeHandler(callback ocpp16.AuthorizeCallback) *Client {
 	c.ocppCallbacks.Authorize = callback

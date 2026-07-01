@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/JohnMaddison/ocpp-go"
-	"github.com/JohnMaddison/ocpp-go/ocpp16"
+	"github.com/johnmaddison/ocpp-go"
+	"github.com/johnmaddison/ocpp-go/ocpp16"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 )

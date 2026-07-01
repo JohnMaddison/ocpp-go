@@ -1,6 +1,6 @@
 package server
 
-import "github.com/JohnMaddison/ocpp-go/ocpp21"
+import "github.com/johnmaddison/ocpp-go/ocpp21"
 
 func WithOCPP21AFRRSignalHandler(callback ocpp21.AFRRSignalCallback) Option {
 	return func(s *Server) {

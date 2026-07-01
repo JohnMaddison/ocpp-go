@@ -6,7 +6,7 @@ import (
 	"log"
 	"reflect"
 
-	"github.com/JohnMaddison/ocpp-go"
+	"github.com/johnmaddison/ocpp-go"
 )
 
 type OCPPMessage []any

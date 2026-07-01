@@ -1,6 +1,6 @@
 package server
 
-import "github.com/JohnMaddison/ocpp-go/ocpp16"
+import "github.com/johnmaddison/ocpp-go/ocpp16"
 
 func WithOCPP16AuthorizeHandler(callback ocpp16.AuthorizeCallback) Option {
 	return func(s *Server) {

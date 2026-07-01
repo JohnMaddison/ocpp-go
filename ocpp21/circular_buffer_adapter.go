@@ -1,6 +1,6 @@
 package ocpp21
 
-import "github.com/JohnMaddison/ocpp-go/internal/cbuf"
+import "github.com/johnmaddison/ocpp-go/internal/cbuf"
 
 type CircularBuffer struct {
 	buf *cbuf.CircularBuffer[Request]
