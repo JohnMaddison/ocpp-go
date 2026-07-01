@@ -62,7 +62,7 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 		}
 		conn.SetPongHandler(func(appData string) error {
 			if opt != nil && opt.LogKeepalive {
-				logf("recv pong")
+				logf("recv: [websocket pong]")
 			}
 			return conn.SetReadDeadline(time.Now().Add(pongTimeout))
 		})
@@ -187,7 +187,7 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 				// Reset deadline so subsequent writes aren't constrained by the ping timeout.
 				_ = conn.SetWriteDeadline(time.Time{})
 				if opt != nil && opt.LogKeepalive {
-					logf("sent ping")
+					logf("sent: [websocket ping]")
 				}
 			case <-done:
 				return
