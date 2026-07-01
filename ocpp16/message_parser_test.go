@@ -1,11 +1,82 @@
 package ocpp16
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
 	"github.com/JohnMaddison/ocpp-go"
 )
+
+func TestParseMessage_BootNotificationCall(t *testing.T) {
+	callbacks := OCPPCallbacks{
+		BootNotification: func(ctx *OCPPContext, request BootNotificationRequest) (*BootNotificationResponse, *OCPPError) {
+			if ctx.ChargePointID != "CP_TEST" {
+				t.Fatalf("unexpected charge point ID: %s", ctx.ChargePointID)
+			}
+			if request.ChargePointModel != "Simulator" {
+				t.Fatalf("unexpected charge point model: %s", request.ChargePointModel)
+			}
+			return &BootNotificationResponse{
+				CurrentTime: time.Now(),
+				Interval:    30,
+				Status:      RegistrationStatusAccepted,
+			}, nil
+		},
+	}
+
+	response, err := callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification",{"chargePointModel":"Simulator","chargePointVendor":"Maddison"}]`), NewOCPPContext("CP_TEST"))
+	if err != nil {
+		t.Fatalf("ParseMessage returned error: %v", err)
+	}
+
+	var message []any
+	if err := json.Unmarshal(response, &message); err != nil {
+		t.Fatalf("response is not JSON: %v", err)
+	}
+	if message[0] != float64(3) || message[1] != "msg-1" {
+		t.Fatalf("unexpected response envelope: %#v", message)
+	}
+}
+
+func TestParseMessage_UnsupportedCallReturnsCallError(t *testing.T) {
+	callbacks := OCPPCallbacks{}
+
+	response, err := callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification",{}]`), NewOCPPContext("CP_TEST"))
+	if err != nil {
+		t.Fatalf("ParseMessage returned error: %v", err)
+	}
+
+	var message []any
+	if err := json.Unmarshal(response, &message); err != nil {
+		t.Fatalf("response is not JSON: %v", err)
+	}
+	if message[0] != float64(4) || message[2] != "NotSupported" {
+		t.Fatalf("unexpected call error: %#v", message)
+	}
+}
+
+func TestParseMessage_MalformedPayloadReturnsFormationViolation(t *testing.T) {
+	callbacks := OCPPCallbacks{
+		BootNotification: func(ctx *OCPPContext, request BootNotificationRequest) (*BootNotificationResponse, *OCPPError) {
+			t.Fatal("callback should not be called")
+			return nil, nil
+		},
+	}
+
+	response, err := callbacks.ParseMessage([]byte(`[2,"msg-1","BootNotification","bad-payload"]`), NewOCPPContext("CP_TEST"))
+	if err != nil {
+		t.Fatalf("ParseMessage returned error: %v", err)
+	}
+
+	var message []any
+	if err := json.Unmarshal(response, &message); err != nil {
+		t.Fatalf("response is not JSON: %v", err)
+	}
+	if message[0] != float64(4) || message[2] != "FormationViolation" {
+		t.Fatalf("unexpected call error: %#v", message)
+	}
+}
 
 func TestParseMessage_DecodesBootNotificationCallResult(t *testing.T) {
 	callbacks := OCPPCallbacks{}

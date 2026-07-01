@@ -3,11 +3,13 @@ package ocpp16
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 )
 
 type callHandler struct {
-	decode   func(any) (any, error)
-	callback func(*OCPPContext, any) (any, *OCPPError)
+	requestType  reflect.Type
+	responseType reflect.Type
+	callback     any
 }
 
 type OCPPError struct {
@@ -98,337 +100,65 @@ type OCPPCallbacks struct {
 
 func (o *OCPPCallbacks) InitHandlers() {
 	o.handlers = map[Action]callHandler{
-		ActionAuthorize: {
-			decode: func(p any) (any, error) { return decodePayload[AuthorizeRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.Authorize == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.Authorize(ctx, req.(AuthorizeRequest))
-			},
-		},
-		ActionBootNotification: {
-			decode: func(p any) (any, error) { return decodePayload[BootNotificationRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.BootNotification == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.BootNotification(ctx, req.(BootNotificationRequest))
-			},
-		},
-		ActionCancelReservation: {
-			decode: func(p any) (any, error) { return decodePayload[CancelReservationRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.CancelReservation == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.CancelReservation(ctx, req.(CancelReservationRequest))
-			},
-		},
-		ActionCertificateSigned: {
-			decode: func(p any) (any, error) { return decodePayload[CertificateSignedRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.CertificateSigned == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.CertificateSigned(ctx, req.(CertificateSignedRequest))
-			},
-		},
-		ActionChangeAvailability: {
-			decode: func(p any) (any, error) { return decodePayload[ChangeAvailabilityRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.ChangeAvailability == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.ChangeAvailability(ctx, req.(ChangeAvailabilityRequest))
-			},
-		},
-		ActionChangeConfiguration: {
-			decode: func(p any) (any, error) { return decodePayload[ChangeConfigurationRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.ChangeConfiguration == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.ChangeConfiguration(ctx, req.(ChangeConfigurationRequest))
-			},
-		},
-		ActionClearCache: {
-			decode: func(p any) (any, error) { return decodePayload[ClearCacheRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.ClearCache == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.ClearCache(ctx, req.(ClearCacheRequest))
-			},
-		},
-		ActionClearChargingProfile: {
-			decode: func(p any) (any, error) { return decodePayload[ClearChargingProfileRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.ClearChargingProfile == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.ClearChargingProfile(ctx, req.(ClearChargingProfileRequest))
-			},
-		},
-		ActionDataTransfer: {
-			decode: func(p any) (any, error) { return decodePayload[DataTransferRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.DataTransfer == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.DataTransfer(ctx, req.(DataTransferRequest))
-			},
-		},
-		ActionDeleteCertificate: {
-			decode: func(p any) (any, error) { return decodePayload[DeleteCertificateRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.DeleteCertificate == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.DeleteCertificate(ctx, req.(DeleteCertificateRequest))
-			},
-		},
-		ActionDiagnosticsStatusNotification: {
-			decode: func(p any) (any, error) { return decodePayload[DiagnosticsStatusNotificationRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.DiagnosticsStatusNotification == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.DiagnosticsStatusNotification(ctx, req.(DiagnosticsStatusNotificationRequest))
-			},
-		},
-		ActionExtendedTriggerMessage: {
-			decode: func(p any) (any, error) { return decodePayload[ExtendedTriggerMessageRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.ExtendedTriggerMessage == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.ExtendedTriggerMessage(ctx, req.(ExtendedTriggerMessageRequest))
-			},
-		},
-		ActionGetCompositeSchedule: {
-			decode: func(p any) (any, error) { return decodePayload[GetCompositeScheduleRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.GetCompositeSchedule == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.GetCompositeSchedule(ctx, req.(GetCompositeScheduleRequest))
-			},
-		},
-		ActionGetConfiguration: {
-			decode: func(p any) (any, error) { return decodePayload[GetConfigurationRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.GetConfiguration == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.GetConfiguration(ctx, req.(GetConfigurationRequest))
-			},
-		},
-		ActionGetDiagnostics: {
-			decode: func(p any) (any, error) { return decodePayload[GetDiagnosticsRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.GetDiagnostics == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.GetDiagnostics(ctx, req.(GetDiagnosticsRequest))
-			},
-		},
-		ActionGetInstalledCertificateIds: {
-			decode: func(p any) (any, error) { return decodePayload[GetInstalledCertificateIdsRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.GetInstalledCertificates == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.GetInstalledCertificates(ctx, req.(GetInstalledCertificateIdsRequest))
-			},
-		},
-		ActionGetLog: {
-			decode: func(p any) (any, error) { return decodePayload[GetLogRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.GetLog == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.GetLog(ctx, req.(GetLogRequest))
-			},
-		},
-		ActionHeartbeat: {
-			decode: func(p any) (any, error) { return decodePayload[HeartbeatRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.Heartbeat == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.Heartbeat(ctx, req.(HeartbeatRequest))
-			},
-		},
-		ActionInstallCertificate: {
-			decode: func(p any) (any, error) { return decodePayload[InstallCertificateRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.InstallCertificate == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.InstallCertificate(ctx, req.(InstallCertificateRequest))
-			},
-		},
-		ActionLogStatusNotification: {
-			decode: func(p any) (any, error) { return decodePayload[LogStatusNotificationRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.LogStatusNotification == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.LogStatusNotification(ctx, req.(LogStatusNotificationRequest))
-			},
-		},
-		ActionMeterValues: {
-			decode: func(p any) (any, error) { return decodePayload[MeterValuesRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.MeterValues == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.MeterValues(ctx, req.(MeterValuesRequest))
-			},
-		},
-		ActionRemoteStartTransaction: {
-			decode: func(p any) (any, error) { return decodePayload[RemoteStartTransactionRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.RemoteStartTransaction == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.RemoteStartTransaction(ctx, req.(RemoteStartTransactionRequest))
-			},
-		},
-		ActionRemoteStopTransaction: {
-			decode: func(p any) (any, error) { return decodePayload[RemoteStopTransactionRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.RemoteStopTransaction == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.RemoteStopTransaction(ctx, req.(RemoteStopTransactionRequest))
-			},
-		},
-		ActionReserveNow: {
-			decode: func(p any) (any, error) { return decodePayload[ReserveNowRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.ReserveNow == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.ReserveNow(ctx, req.(ReserveNowRequest))
-			},
-		},
-		ActionReset: {
-			decode: func(p any) (any, error) { return decodePayload[ResetRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.Reset == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.Reset(ctx, req.(ResetRequest))
-			},
-		},
-		ActionSendLocalList: {
-			decode: func(p any) (any, error) { return decodePayload[SendLocalListRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.SendLocalList == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.SendLocalList(ctx, req.(SendLocalListRequest))
-			},
-		},
-		ActionSetChargingProfile: {
-			decode: func(p any) (any, error) { return decodePayload[SetChargingProfileRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.SetChargingProfile == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.SetChargingProfile(ctx, req.(SetChargingProfileRequest))
-			},
-		},
-		ActionSignCertificate: {
-			decode: func(p any) (any, error) { return decodePayload[SignCertificateRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.SignCertificate == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.SignCertificate(ctx, req.(SignCertificateRequest))
-			},
-		},
-		ActionSignedFirmwareStatusNotification: {
-			decode: func(p any) (any, error) { return decodePayload[SignedFirmwareStatusNotificationRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.SignedFirmwareStatusNotification == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.SignedFirmwareStatusNotification(ctx, req.(SignedFirmwareStatusNotificationRequest))
-			},
-		},
-		ActionSignedUpdateFirmware: {
-			decode: func(p any) (any, error) { return decodePayload[SignedUpdateFirmwareRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.SignedUpdateFirmware == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.SignedUpdateFirmware(ctx, req.(SignedUpdateFirmwareRequest))
-			},
-		},
-		ActionStartTransaction: {
-			decode: func(p any) (any, error) { return decodePayload[StartTransactionRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.StartTransaction == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.StartTransaction(ctx, req.(StartTransactionRequest))
-			},
-		},
-		ActionStatusNotification: {
-			decode: func(p any) (any, error) { return decodePayload[StatusNotificationRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.StatusNotification == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.StatusNotification(ctx, req.(StatusNotificationRequest))
-			},
-		},
-		ActionStopTransaction: {
-			decode: func(p any) (any, error) { return decodePayload[StopTransactionRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.StopTransaction == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.StopTransaction(ctx, req.(StopTransactionRequest))
-			},
-		},
-		ActionTriggerMessage: {
-			decode: func(p any) (any, error) { return decodePayload[TriggerMessageRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.TriggerMessage == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.TriggerMessage(ctx, req.(TriggerMessageRequest))
-			},
-		},
-		ActionUnlockConnector: {
-			decode: func(p any) (any, error) { return decodePayload[UnlockConnectorRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.UnlockConnector == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.UnlockConnector(ctx, req.(UnlockConnectorRequest))
-			},
-		},
-		ActionUpdateFirmware: {
-			decode: func(p any) (any, error) { return decodePayload[UpdateFirmwareRequest](p) },
-			callback: func(ctx *OCPPContext, req any) (any, *OCPPError) {
-				if o.UpdateFirmware == nil {
-					return nil, &OCPPError{ErrorCode: NotSupported, ErrorDescription: ActionNotRecognized, ErrorDetails: nil}
-				}
-				return o.UpdateFirmware(ctx, req.(UpdateFirmwareRequest))
-			},
-		},
+		ActionAuthorize:                        newCallHandler[AuthorizeRequest, AuthorizeResponse](o.Authorize),
+		ActionBootNotification:                 newCallHandler[BootNotificationRequest, BootNotificationResponse](o.BootNotification),
+		ActionCancelReservation:                newCallHandler[CancelReservationRequest, CancelReservationResponse](o.CancelReservation),
+		ActionCertificateSigned:                newCallHandler[CertificateSignedRequest, CertificateSignedResponse](o.CertificateSigned),
+		ActionChangeAvailability:               newCallHandler[ChangeAvailabilityRequest, ChangeAvailabilityResponse](o.ChangeAvailability),
+		ActionChangeConfiguration:              newCallHandler[ChangeConfigurationRequest, ChangeConfigurationResponse](o.ChangeConfiguration),
+		ActionClearCache:                       newCallHandler[ClearCacheRequest, ClearCacheResponse](o.ClearCache),
+		ActionClearChargingProfile:             newCallHandler[ClearChargingProfileRequest, ClearChargingProfileResponse](o.ClearChargingProfile),
+		ActionDataTransfer:                     newCallHandler[DataTransferRequest, DataTransferResponse](o.DataTransfer),
+		ActionDeleteCertificate:                newCallHandler[DeleteCertificateRequest, DeleteCertificateResponse](o.DeleteCertificate),
+		ActionDiagnosticsStatusNotification:    newCallHandler[DiagnosticsStatusNotificationRequest, DiagnosticsStatusNotificationResponse](o.DiagnosticsStatusNotification),
+		ActionExtendedTriggerMessage:           newCallHandler[ExtendedTriggerMessageRequest, ExtendedTriggerMessageResponse](o.ExtendedTriggerMessage),
+		ActionFirmwareStatusNotification:       newCallHandler[FirmwareStatusNotificationRequest, FirmwareStatusNotificationResponse](nil),
+		ActionGetCompositeSchedule:             newCallHandler[GetCompositeScheduleRequest, GetCompositeScheduleResponse](o.GetCompositeSchedule),
+		ActionGetConfiguration:                 newCallHandler[GetConfigurationRequest, GetConfigurationResponse](o.GetConfiguration),
+		ActionGetDiagnostics:                   newCallHandler[GetDiagnosticsRequest, GetDiagnosticsResponse](o.GetDiagnostics),
+		ActionGetInstalledCertificateIds:       newCallHandler[GetInstalledCertificateIdsRequest, GetInstalledCertificateIdsResponse](o.GetInstalledCertificates),
+		ActionGetLocalListVersion:              newCallHandler[GetLocalListVersionRequest, GetLocalListVersionResponse](nil),
+		ActionGetLog:                           newCallHandler[GetLogRequest, GetLogResponse](o.GetLog),
+		ActionHeartbeat:                        newCallHandler[HeartbeatRequest, HeartbeatResponse](o.Heartbeat),
+		ActionInstallCertificate:               newCallHandler[InstallCertificateRequest, InstallCertificateResponse](o.InstallCertificate),
+		ActionLogStatusNotification:            newCallHandler[LogStatusNotificationRequest, LogStatusNotificationResponse](o.LogStatusNotification),
+		ActionMeterValues:                      newCallHandler[MeterValuesRequest, MeterValuesResponse](o.MeterValues),
+		ActionRemoteStartTransaction:           newCallHandler[RemoteStartTransactionRequest, RemoteStartTransactionResponse](o.RemoteStartTransaction),
+		ActionRemoteStopTransaction:            newCallHandler[RemoteStopTransactionRequest, RemoteStopTransactionResponse](o.RemoteStopTransaction),
+		ActionReserveNow:                       newCallHandler[ReserveNowRequest, ReserveNowResponse](o.ReserveNow),
+		ActionReset:                            newCallHandler[ResetRequest, ResetResponse](o.Reset),
+		ActionSecurityEventNotification:        newCallHandler[SecurityEventNotificationRequest, SecurityEventNotificationResponse](nil),
+		ActionSendLocalList:                    newCallHandler[SendLocalListRequest, SendLocalListResponse](o.SendLocalList),
+		ActionSetChargingProfile:               newCallHandler[SetChargingProfileRequest, SetChargingProfileResponse](o.SetChargingProfile),
+		ActionSignCertificate:                  newCallHandler[SignCertificateRequest, SignCertificateResponse](o.SignCertificate),
+		ActionSignedFirmwareStatusNotification: newCallHandler[SignedFirmwareStatusNotificationRequest, SignedFirmwareStatusNotificationResponse](o.SignedFirmwareStatusNotification),
+		ActionSignedUpdateFirmware:             newCallHandler[SignedUpdateFirmwareRequest, SignedUpdateFirmwareResponse](o.SignedUpdateFirmware),
+		ActionStartTransaction:                 newCallHandler[StartTransactionRequest, StartTransactionResponse](o.StartTransaction),
+		ActionStatusNotification:               newCallHandler[StatusNotificationRequest, StatusNotificationResponse](o.StatusNotification),
+		ActionStopTransaction:                  newCallHandler[StopTransactionRequest, StopTransactionResponse](o.StopTransaction),
+		ActionTriggerMessage:                   newCallHandler[TriggerMessageRequest, TriggerMessageResponse](o.TriggerMessage),
+		ActionUnlockConnector:                  newCallHandler[UnlockConnectorRequest, UnlockConnectorResponse](o.UnlockConnector),
+		ActionUpdateFirmware:                   newCallHandler[UpdateFirmwareRequest, UpdateFirmwareResponse](o.UpdateFirmware),
+	}
+}
+
+func newCallHandler[Req any, Resp any](callback func(*OCPPContext, Req) (*Resp, *OCPPError)) callHandler {
+	var req Req
+	var resp Resp
+	var cb any
+	if callback != nil {
+		cb = callback
+	}
+	return callHandler{
+		requestType:  reflect.TypeOf(req),
+		responseType: reflect.TypeOf(resp),
+		callback:     cb,
 	}
 }
 
 func decodePayload[T any](payload any) (T, error) {
 	var result T
 
-	// Fast path: if it's already the right type
 	if typed, ok := payload.(T); ok {
 		return typed, nil
 	}
@@ -443,4 +173,16 @@ func decodePayload[T any](payload any) (T, error) {
 	}
 
 	return result, nil
+}
+
+func decodePayloadByType(payload any, typ reflect.Type) (any, error) {
+	value := reflect.New(typ)
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal payload: %w", err)
+	}
+	if err := json.Unmarshal(data, value.Interface()); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal payload into %s: %w", typ, err)
+	}
+	return value.Elem().Interface(), nil
 }
