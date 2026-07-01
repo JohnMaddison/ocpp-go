@@ -3,6 +3,7 @@ package server
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/JohnMaddison/ocpp-go"
 	"github.com/JohnMaddison/ocpp-go/internal/ws"
@@ -47,6 +48,8 @@ func (o *Server) wshandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer c.Close()
+	o.registerWebsocket(c)
+	defer o.unregisterWebsocket(c)
 
 	runtime, ok := o.runtime(cpid, c.Subprotocol())
 	if !ok {
@@ -61,6 +64,42 @@ func (o *Server) wshandler(w http.ResponseWriter, r *http.Request) {
 		PingInterval: o.pingInterval,
 		PongTimeout:  o.pongTimeout,
 	})
+}
+
+func (o *Server) registerWebsocket(conn *websocket.Conn) {
+	o.mu.Lock()
+	if o.activeWebsockets == nil {
+		o.activeWebsockets = make(map[*websocket.Conn]struct{})
+	}
+	o.activeWebsockets[conn] = struct{}{}
+	o.mu.Unlock()
+}
+
+func (o *Server) unregisterWebsocket(conn *websocket.Conn) {
+	o.mu.Lock()
+	delete(o.activeWebsockets, conn)
+	o.mu.Unlock()
+}
+
+func (o *Server) closeActiveWebsockets() {
+	o.mu.Lock()
+	conns := make([]*websocket.Conn, 0, len(o.activeWebsockets))
+	for conn := range o.activeWebsockets {
+		conns = append(conns, conn)
+	}
+	o.mu.Unlock()
+
+	deadline := time.Now().Add(time.Second)
+	for _, conn := range conns {
+		_ = conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "server shutting down"), deadline)
+		_ = conn.Close()
+	}
+}
+
+func (o *Server) activeWebsocketCount() int {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	return len(o.activeWebsockets)
 }
 
 func hasNegotiableSubprotocol(r *http.Request, supported []string) bool {

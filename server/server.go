@@ -11,22 +11,24 @@ import (
 	"github.com/JohnMaddison/ocpp-go"
 	"github.com/JohnMaddison/ocpp-go/ocpp16"
 	"github.com/JohnMaddison/ocpp-go/ocpp21"
+	"github.com/gorilla/websocket"
 )
 
 type Server struct {
-	mu              sync.Mutex
-	address         string
-	path            string
-	httpServer      *http.Server
-	ocppCallbacks   ocpp16.OCPPCallbacks
-	ocpp21Callbacks ocpp21.OCPPCallbacks
-	socketCallbacks ocpp.SocketCallbacks
-	logTraffic      bool
-	logKeepalive    bool
-	parser          func(message []byte, ctx *ocpp16.OCPPContext) ([]byte, error)
-	subprotocols    []string
-	ocpp16Enabled   bool
-	ocpp21Enabled   bool
+	mu               sync.Mutex
+	address          string
+	path             string
+	httpServer       *http.Server
+	activeWebsockets map[*websocket.Conn]struct{}
+	ocppCallbacks    ocpp16.OCPPCallbacks
+	ocpp21Callbacks  ocpp21.OCPPCallbacks
+	socketCallbacks  ocpp.SocketCallbacks
+	logTraffic       bool
+	logKeepalive     bool
+	parser           func(message []byte, ctx *ocpp16.OCPPContext) ([]byte, error)
+	subprotocols     []string
+	ocpp16Enabled    bool
+	ocpp21Enabled    bool
 	// Basic auth (optional)
 	basicAuthEnabled bool
 	basicUser        string
@@ -46,8 +48,9 @@ type Option func(*Server)
 // NewServer creates a new configurable OCPP server using options.
 func NewServer(address string, opts ...Option) *Server {
 	s := &Server{
-		address: address,
-		path:    "ocpp",
+		address:          address,
+		path:             "ocpp",
+		activeWebsockets: make(map[*websocket.Conn]struct{}),
 	}
 	for _, opt := range opts {
 		opt(s)
@@ -208,5 +211,23 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	if httpServer == nil {
 		return http.ErrServerClosed
 	}
-	return httpServer.Shutdown(ctx)
+
+	err := httpServer.Shutdown(ctx)
+	s.closeActiveWebsockets()
+
+	ticker := time.NewTicker(10 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		if s.activeWebsocketCount() == 0 {
+			return err
+		}
+		select {
+		case <-ticker.C:
+		case <-ctx.Done():
+			if err != nil {
+				return err
+			}
+			return ctx.Err()
+		}
+	}
 }

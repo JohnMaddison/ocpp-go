@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"log"
 	"net/http"
@@ -30,20 +31,8 @@ func main() {
 	flag.Parse()
 
 	// Handle graceful shutdown
-	_, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		<-sigChan
-		log.Print("Received interrupt signal, shutting down gracefully...")
-		// Cancel context to signal shutdown
-		cancel()
-		log.Print("Shutdown complete")
-		os.Exit(0)
-	}()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	if *profiler {
 		go func() {
@@ -77,10 +66,28 @@ func main() {
 	srv := server.NewServer(*addr, opts...)
 
 	log.Printf("Starting server")
-	err := srv.Serve()
-	if err != nil {
-		log.Printf("Failed to start server %s", err)
-		return
+
+	serveErr := make(chan error, 1)
+	go func() {
+		serveErr <- srv.Serve()
+	}()
+
+	select {
+	case <-ctx.Done():
+		log.Print("Received interrupt signal, shutting down gracefully...")
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			log.Printf("Shutdown failed: %s", err)
+		}
+		if err := <-serveErr; err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Printf("Server stopped with error: %s", err)
+		}
+		log.Print("Shutdown complete")
+	case err := <-serveErr:
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Printf("Failed to start server %s", err)
+		}
 	}
 }
 
