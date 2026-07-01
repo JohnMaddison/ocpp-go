@@ -59,10 +59,20 @@ func (s *OCPPContext) Send(call ocpp.Call) (*ResultOrError, error) {
 	return s.SendWithTimeout(call, 10*time.Second)
 }
 
+// SendCall sends a typed OCPP 2.1 CALL with a default 10-second timeout.
+func (s *OCPPContext) SendCall(action Action, payload any) (*ResultOrError, error) {
+	return s.Send(ocpp.Call{MessageType: ocpp.MessageTypeCall, Action: string(action), Payload: payload})
+}
+
 func (s *OCPPContext) SendWithTimeout(call ocpp.Call, timeout time.Duration) (*ResultOrError, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	return s.SendWithContext(ctx, call)
+}
+
+// SendCallWithContext sends a typed OCPP 2.1 CALL with context cancellation.
+func (s *OCPPContext) SendCallWithContext(ctx context.Context, action Action, payload any) (*ResultOrError, error) {
+	return s.SendWithContext(ctx, ocpp.Call{MessageType: ocpp.MessageTypeCall, Action: string(action), Payload: payload})
 }
 
 func (s *OCPPContext) SendWithContext(ctx context.Context, call ocpp.Call) (*ResultOrError, error) {

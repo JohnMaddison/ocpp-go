@@ -66,12 +66,28 @@ func (s *Session) SendOCPP16(call ocpp.Call) (*ocpp16.ResultOrError, error) {
 	return s.ocpp16Context.Send(call)
 }
 
+// SendOCPP16Call sends a typed OCPP 1.6 CALL to the connected charge point.
+func (s *Session) SendOCPP16Call(action ocpp16.Action, payload any) (*ocpp16.ResultOrError, error) {
+	if s.ocpp16Context == nil {
+		return nil, s.wrongProtocolError("ocpp1.6")
+	}
+	return s.ocpp16Context.SendCall(action, payload)
+}
+
 // SendOCPP16WithContext sends an OCPP 1.6 CALL with context cancellation.
 func (s *Session) SendOCPP16WithContext(ctx context.Context, call ocpp.Call) (*ocpp16.ResultOrError, error) {
 	if s.ocpp16Context == nil {
 		return nil, s.wrongProtocolError("ocpp1.6")
 	}
 	return s.ocpp16Context.SendWithContext(ctx, call)
+}
+
+// SendOCPP16CallWithContext sends a typed OCPP 1.6 CALL with context cancellation.
+func (s *Session) SendOCPP16CallWithContext(ctx context.Context, action ocpp16.Action, payload any) (*ocpp16.ResultOrError, error) {
+	if s.ocpp16Context == nil {
+		return nil, s.wrongProtocolError("ocpp1.6")
+	}
+	return s.ocpp16Context.SendCallWithContext(ctx, action, payload)
 }
 
 // SendOCPP21 sends an OCPP 2.1 CALL to the connected charge point.
@@ -82,12 +98,28 @@ func (s *Session) SendOCPP21(call ocpp.Call) (*ocpp21.ResultOrError, error) {
 	return s.ocpp21Context.Send(call)
 }
 
+// SendOCPP21Call sends a typed OCPP 2.1 CALL to the connected charge point.
+func (s *Session) SendOCPP21Call(action ocpp21.Action, payload any) (*ocpp21.ResultOrError, error) {
+	if s.ocpp21Context == nil {
+		return nil, s.wrongProtocolError("ocpp2.1")
+	}
+	return s.ocpp21Context.SendCall(action, payload)
+}
+
 // SendOCPP21WithContext sends an OCPP 2.1 CALL with context cancellation.
 func (s *Session) SendOCPP21WithContext(ctx context.Context, call ocpp.Call) (*ocpp21.ResultOrError, error) {
 	if s.ocpp21Context == nil {
 		return nil, s.wrongProtocolError("ocpp2.1")
 	}
 	return s.ocpp21Context.SendWithContext(ctx, call)
+}
+
+// SendOCPP21CallWithContext sends a typed OCPP 2.1 CALL with context cancellation.
+func (s *Session) SendOCPP21CallWithContext(ctx context.Context, action ocpp21.Action, payload any) (*ocpp21.ResultOrError, error) {
+	if s.ocpp21Context == nil {
+		return nil, s.wrongProtocolError("ocpp2.1")
+	}
+	return s.ocpp21Context.SendCallWithContext(ctx, action, payload)
 }
 
 func (s *Session) wrongProtocolError(want string) error {

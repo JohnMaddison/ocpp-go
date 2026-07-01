@@ -121,9 +121,9 @@ func (c *Client) WithWebsocketKeepalive(interval, pongTimeout time.Duration) *Cl
 }
 
 func (c *Client) SendOCPP16Call(action ocpp16.Action, payload any) (*ocpp16.ResultOrError, error) {
-	return c.OCPPContext.Send(ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: c.messageIdGenerator(), Action: string(action), Payload: payload})
+	return c.OCPPContext.SendCall(action, payload)
 }
 
 func (c *Client) SendOCPP21Call(action ocpp21.Action, payload any) (*ocpp21.ResultOrError, error) {
-	return c.OCPP21Context.Send(ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: c.messageIdGenerator(), Action: string(action), Payload: payload})
+	return c.OCPP21Context.SendCall(action, payload)
 }
