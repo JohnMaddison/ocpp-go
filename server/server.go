@@ -21,6 +21,7 @@ type Server struct {
 	path             string
 	httpServer       *http.Server
 	activeWebsockets map[*websocket.Conn]struct{}
+	sessions         map[string]*Session
 	ocppCallbacks    ocpp16.OCPPCallbacks
 	ocpp21Callbacks  ocpp21.OCPPCallbacks
 	socketCallbacks  ocpp.SocketCallbacks
@@ -53,6 +54,7 @@ func NewServer(address string, opts ...Option) *Server {
 		address:            address,
 		path:               "ocpp",
 		activeWebsockets:   make(map[*websocket.Conn]struct{}),
+		sessions:           make(map[string]*Session),
 		messageIdGenerator: uuidgenerator.DefaultUUIDGenerator,
 	}
 	for _, opt := range opts {

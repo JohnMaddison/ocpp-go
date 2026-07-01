@@ -2,6 +2,7 @@ package server
 
 import (
 	"log"
+	"net"
 	"net/http"
 	"time"
 
@@ -51,11 +52,13 @@ func (o *Server) wshandler(w http.ResponseWriter, r *http.Request) {
 	o.registerWebsocket(c)
 	defer o.unregisterWebsocket(c)
 
-	runtime, ok := o.runtime(cpid, c.Subprotocol())
+	runtime, session, ok := o.runtime(cpid, c.Subprotocol(), c.RemoteAddr(), c.LocalAddr())
 	if !ok {
 		log.Printf("unsupported negotiated subprotocol: %s", c.Subprotocol())
 		return
 	}
+	o.registerSession(session)
+	defer o.unregisterSession(session)
 
 	// Use common runner with optional traffic logging and keepalive settings
 	ws.Run(c, runtime, o.socketCallbacks, &ws.Options{
@@ -114,10 +117,17 @@ func hasNegotiableSubprotocol(r *http.Request, supported []string) bool {
 	return false
 }
 
-func (o *Server) runtime(cpid, protocol string) (ws.Runtime, bool) {
+func (o *Server) runtime(cpid, protocol string, remoteAddr, localAddr net.Addr) (ws.Runtime, *Session, bool) {
 	switch protocol {
 	case "ocpp1.6":
 		context := ocpp16.NewOCPPContextWithMessageIdGenerator(cpid, o.messageIdGenerator)
+		session := &Session{
+			chargePointID: cpid,
+			protocol:      protocol,
+			remoteAddr:    remoteAddr,
+			localAddr:     localAddr,
+			ocpp16Context: context,
+		}
 		parser := o.parser
 		if parser == nil {
 			parser = o.ocppCallbacks.ParseMessage
@@ -132,9 +142,16 @@ func (o *Server) runtime(cpid, protocol string) (ws.Runtime, bool) {
 				request := call.(ocpp16.Request)
 				return request.Call.SerializeOCPP()
 			},
-		}, true
+		}, session, true
 	case "ocpp2.1":
 		context := ocpp21.NewOCPPContextWithMessageIdGenerator(cpid, o.messageIdGenerator)
+		session := &Session{
+			chargePointID: cpid,
+			protocol:      protocol,
+			remoteAddr:    remoteAddr,
+			localAddr:     localAddr,
+			ocpp21Context: context,
+		}
 		return ws.Runtime{
 			ChargePointID: context.ChargePointID,
 			OutgoingCalls: requestChannel[ocpp21.Request](context.Queue),
@@ -145,9 +162,9 @@ func (o *Server) runtime(cpid, protocol string) (ws.Runtime, bool) {
 				request := call.(ocpp21.Request)
 				return request.Call.SerializeOCPP()
 			},
-		}, true
+		}, session, true
 	default:
-		return ws.Runtime{}, false
+		return ws.Runtime{}, nil, false
 	}
 }
 
