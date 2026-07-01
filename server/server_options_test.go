@@ -7,7 +7,25 @@ import (
 
 	"github.com/JohnMaddison/ocpp-go/ocpp16"
 	"github.com/JohnMaddison/ocpp-go/ocpp21"
+	"github.com/google/uuid"
 )
+
+func TestServerUsesDefaultMessageIdGenerator(t *testing.T) {
+	s := NewServer(":0")
+	if s.messageIdGenerator == nil {
+		t.Fatal("expected default message ID generator")
+	}
+	if _, err := uuid.Parse(s.messageIdGenerator()); err != nil {
+		t.Fatalf("expected UUID message ID, got error: %v", err)
+	}
+}
+
+func TestServerMessageIdGeneratorCanBeOverridden(t *testing.T) {
+	s := NewServer(":0", WithMessageIdGenerator(func() string { return "custom-id" }))
+	if got := s.messageIdGenerator(); got != "custom-id" {
+		t.Fatalf("expected custom-id, got %q", got)
+	}
+}
 
 func TestWithOCPP16BootNotificationHandlerRoutesIncomingCall(t *testing.T) {
 	called := false

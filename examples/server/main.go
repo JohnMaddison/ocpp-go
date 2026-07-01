@@ -15,7 +15,6 @@ import (
 	"github.com/JohnMaddison/ocpp-go"
 	"github.com/JohnMaddison/ocpp-go/ocpp16"
 	"github.com/JohnMaddison/ocpp-go/server"
-	"github.com/google/uuid"
 )
 
 // var debug = flag.Bool("debug", false, "enable debug logging")
@@ -109,7 +108,7 @@ func bootNotificationHandler(ctx *ocpp16.OCPPContext, request ocpp16.BootNotific
 
 	go func() {
 		time.Sleep(2 * time.Second)
-		c := ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: uuid.New().String(), Action: "GetConfiguration", Payload: ocpp16.GetConfigurationRequest{}}
+		c := ocpp.Call{MessageType: ocpp.MessageTypeCall, Action: "GetConfiguration", Payload: ocpp16.GetConfigurationRequest{}}
 		log.Printf("Sending getconfig: %s\n", ctx.ChargePointID)
 		request, err := ctx.Send(c)
 		if err != nil {

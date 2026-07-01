@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/google/uuid"
+	"github.com/JohnMaddison/ocpp-go/internal/uuidgenerator"
 )
 
 // MessageType constants define the type of the OCPP message.
@@ -35,7 +35,7 @@ func (c *Call) SerializeOCPP() ([]byte, error) {
 }
 
 func NewCall(action string, payload any) *Call {
-	return &Call{MessageType: MessageTypeCall, MessageID: uuid.New().String(), Action: action, Payload: payload}
+	return &Call{MessageType: MessageTypeCall, MessageID: uuidgenerator.DefaultUUIDGenerator(), Action: action, Payload: payload}
 }
 
 // CallResult represents a successful response to a Call.

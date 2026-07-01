@@ -7,6 +7,7 @@ import (
 
 	"github.com/JohnMaddison/ocpp-go/ocpp16"
 	"github.com/JohnMaddison/ocpp-go/ocpp21"
+	"github.com/google/uuid"
 )
 
 func TestNewClientInitializesOCPPHandlers(t *testing.T) {
@@ -35,6 +36,29 @@ func TestVersionedConstructorsSelectSingleSubprotocol(t *testing.T) {
 	client21 := NewOCPP21Client("CP_1", "ws://127.0.0.1:9001/ocpp")
 	if client21.subprotocol != "ocpp2.1" {
 		t.Fatalf("OCPP 2.1 client subprotocol = %q", client21.subprotocol)
+	}
+}
+
+func TestClientConstructorsUseDefaultMessageIdGenerator(t *testing.T) {
+	for _, c := range []*Client{
+		NewOCPP16Client("CP_1", "ws://127.0.0.1:9001/ocpp"),
+		NewOCPP21Client("CP_1", "ws://127.0.0.1:9001/ocpp"),
+	} {
+		if c.messageIdGenerator == nil {
+			t.Fatal("expected default message ID generator")
+		}
+		if _, err := uuid.Parse(c.messageIdGenerator()); err != nil {
+			t.Fatalf("expected UUID message ID, got error: %v", err)
+		}
+	}
+}
+
+func TestClientMessageIdGeneratorCanBeOverridden(t *testing.T) {
+	c := NewOCPP16Client("CP_1", "ws://127.0.0.1:9001/ocpp").
+		WithMessageIdGenerator(func() string { return "custom-id" })
+
+	if got := c.messageIdGenerator(); got != "custom-id" {
+		t.Fatalf("expected custom-id, got %q", got)
 	}
 }
 

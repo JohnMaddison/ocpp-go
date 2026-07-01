@@ -5,34 +5,36 @@ import (
 	"time"
 
 	"github.com/JohnMaddison/ocpp-go"
+	"github.com/JohnMaddison/ocpp-go/internal/uuidgenerator"
 	"github.com/JohnMaddison/ocpp-go/ocpp16"
 	"github.com/JohnMaddison/ocpp-go/ocpp21"
-	"github.com/google/uuid"
 )
 
 type Client struct {
-	chargePointID   string
-	address         string
-	ocppCallbacks   ocpp16.OCPPCallbacks
-	ocpp21Callbacks ocpp21.OCPPCallbacks
-	socketCallbacks ocpp.SocketCallbacks
-	OCPPContext     *ocpp16.OCPPContext
-	OCPP21Context   *ocpp21.OCPPContext
-	subprotocol     string
-	logTraffic      bool
-	logKeepalive    bool
-	username        string
-	password        string
-	pingInterval    time.Duration
-	pongTimeout     time.Duration
+	chargePointID      string
+	address            string
+	ocppCallbacks      ocpp16.OCPPCallbacks
+	ocpp21Callbacks    ocpp21.OCPPCallbacks
+	socketCallbacks    ocpp.SocketCallbacks
+	OCPPContext        *ocpp16.OCPPContext
+	OCPP21Context      *ocpp21.OCPPContext
+	subprotocol        string
+	logTraffic         bool
+	logKeepalive       bool
+	username           string
+	password           string
+	pingInterval       time.Duration
+	pongTimeout        time.Duration
+	messageIdGenerator uuidgenerator.MessageIdGeneratorMethod
 }
 
 func NewOCPP16Client(chargePointID, address string) *Client {
 	client := &Client{
-		chargePointID: chargePointID,
-		address:       address,
-		OCPPContext:   nil,
-		subprotocol:   "ocpp1.6",
+		chargePointID:      chargePointID,
+		address:            address,
+		OCPPContext:        nil,
+		subprotocol:        "ocpp1.6",
+		messageIdGenerator: uuidgenerator.DefaultUUIDGenerator,
 	}
 	client.ocppCallbacks.InitHandlers()
 	return client
@@ -40,10 +42,11 @@ func NewOCPP16Client(chargePointID, address string) *Client {
 
 func NewOCPP21Client(chargePointID, address string) *Client {
 	client := &Client{
-		chargePointID: chargePointID,
-		address:       address,
-		OCPP21Context: nil,
-		subprotocol:   "ocpp2.1",
+		chargePointID:      chargePointID,
+		address:            address,
+		OCPP21Context:      nil,
+		subprotocol:        "ocpp2.1",
+		messageIdGenerator: uuidgenerator.DefaultUUIDGenerator,
 	}
 	client.ocpp21Callbacks.InitHandlers()
 	return client
@@ -58,6 +61,13 @@ func (c *Client) WithTrafficLogging() *Client {
 // EnableKeepaliveLogging toggles logging of websocket ping/pong frames.
 func (c *Client) WithKeepaliveLogging() *Client {
 	c.logKeepalive = true
+	return c
+}
+
+func (c *Client) WithMessageIdGenerator(f func() string) *Client {
+	if f != nil {
+		c.messageIdGenerator = f
+	}
 	return c
 }
 
@@ -111,9 +121,9 @@ func (c *Client) WithWebsocketKeepalive(interval, pongTimeout time.Duration) *Cl
 }
 
 func (c *Client) SendOCPP16Call(action ocpp16.Action, payload any) (*ocpp16.ResultOrError, error) {
-	return c.OCPPContext.Send(ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: uuid.New().String(), Action: string(action), Payload: payload})
+	return c.OCPPContext.Send(ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: c.messageIdGenerator(), Action: string(action), Payload: payload})
 }
 
 func (c *Client) SendOCPP21Call(action ocpp21.Action, payload any) (*ocpp21.ResultOrError, error) {
-	return c.OCPP21Context.Send(ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: uuid.New().String(), Action: string(action), Payload: payload})
+	return c.OCPP21Context.Send(ocpp.Call{MessageType: ocpp.MessageTypeCall, MessageID: c.messageIdGenerator(), Action: string(action), Payload: payload})
 }

@@ -117,7 +117,7 @@ func hasNegotiableSubprotocol(r *http.Request, supported []string) bool {
 func (o *Server) runtime(cpid, protocol string) (ws.Runtime, bool) {
 	switch protocol {
 	case "ocpp1.6":
-		context := ocpp16.NewOCPPContext(cpid)
+		context := ocpp16.NewOCPPContextWithMessageIdGenerator(cpid, o.messageIdGenerator)
 		parser := o.parser
 		if parser == nil {
 			parser = o.ocppCallbacks.ParseMessage
@@ -134,7 +134,7 @@ func (o *Server) runtime(cpid, protocol string) (ws.Runtime, bool) {
 			},
 		}, true
 	case "ocpp2.1":
-		context := ocpp21.NewOCPPContext(cpid)
+		context := ocpp21.NewOCPPContextWithMessageIdGenerator(cpid, o.messageIdGenerator)
 		return ws.Runtime{
 			ChargePointID: context.ChargePointID,
 			OutgoingCalls: requestChannel[ocpp21.Request](context.Queue),

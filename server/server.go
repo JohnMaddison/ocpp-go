@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/JohnMaddison/ocpp-go"
+	"github.com/JohnMaddison/ocpp-go/internal/uuidgenerator"
 	"github.com/JohnMaddison/ocpp-go/ocpp16"
 	"github.com/JohnMaddison/ocpp-go/ocpp21"
 	"github.com/gorilla/websocket"
@@ -38,8 +39,9 @@ type Server struct {
 	tlsCert    string
 	tlsKey     string
 	// Websocket keepalive options
-	pingInterval time.Duration
-	pongTimeout  time.Duration
+	pingInterval       time.Duration
+	pongTimeout        time.Duration
+	messageIdGenerator uuidgenerator.MessageIdGeneratorMethod
 }
 
 // Option configures a Server.
@@ -48,9 +50,10 @@ type Option func(*Server)
 // NewServer creates a new configurable OCPP server using options.
 func NewServer(address string, opts ...Option) *Server {
 	s := &Server{
-		address:          address,
-		path:             "ocpp",
-		activeWebsockets: make(map[*websocket.Conn]struct{}),
+		address:            address,
+		path:               "ocpp",
+		activeWebsockets:   make(map[*websocket.Conn]struct{}),
+		messageIdGenerator: uuidgenerator.DefaultUUIDGenerator,
 	}
 	for _, opt := range opts {
 		opt(s)
@@ -147,6 +150,14 @@ func WithWebsocketKeepalive(interval, pongTimeout time.Duration) Option {
 
 // WithKeepaliveLogging enables logging of websocket ping/pong frames.
 func WithKeepaliveLogging() Option { return func(s *Server) { s.logKeepalive = true } }
+
+func WithMessageIdGenerator(f func() string) Option {
+	return func(s *Server) {
+		if f != nil {
+			s.messageIdGenerator = f
+		}
+	}
+}
 
 // WithBasicAuth enables HTTP Basic Auth using the given username and password.
 func WithBasicAuth(username, password string) Option {
