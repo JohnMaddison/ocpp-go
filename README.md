@@ -3,7 +3,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/JohnMaddison/ocpp-go.svg)](https://pkg.go.dev/github.com/JohnMaddison/ocpp-go)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A Go library for building Open Charge Point Protocol (OCPP) clients and centralsystems.
+A Go library for building Open Charge Point Protocol (OCPP) clients and central systems.
 
 `ocpp-go` provides typed OCPP message structs, JSON array serialization, a
 WebSocket client, a WebSocket server, callback-based message routing, and
@@ -16,6 +16,10 @@ staying idiomatic for Go.
 ## Status
 This project is still early. APIs may change while the library settles.
 
+Current protocol support:
+
+- OCPP 1.6 JSON: typed messages, client/server routing, callbacks, and request/response helpers.
+- OCPP 2.1 JSON: typed messages, client/server routing, callbacks, and request/response helpers.
 
 ## Installation
 
@@ -30,6 +34,7 @@ import (
 	"github.com/JohnMaddison/ocpp-go"
 	"github.com/JohnMaddison/ocpp-go/client"
 	"github.com/JohnMaddison/ocpp-go/ocpp16"
+	"github.com/JohnMaddison/ocpp-go/ocpp21"
 	"github.com/JohnMaddison/ocpp-go/server"
 )
 ```
