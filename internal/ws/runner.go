@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/johnmaddison/ocpp-go"
 	"github.com/gorilla/websocket"
+	"github.com/johnmaddison/ocpp-go"
 )
 
 // Options controls behavior of the websocket runner.
@@ -22,6 +22,8 @@ type Options struct {
 	PongTimeout time.Duration
 	// LogKeepalive records ping/pong traffic when enabled.
 	LogKeepalive bool
+	// ReadLimit sets the maximum websocket message size when greater than zero.
+	ReadLimit int64
 }
 
 type Runtime struct {
@@ -66,6 +68,9 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 			}
 			return conn.SetReadDeadline(time.Now().Add(pongTimeout))
 		})
+	}
+	if opt != nil && opt.ReadLimit > 0 {
+		conn.SetReadLimit(opt.ReadLimit)
 	}
 	// Connected callback
 	connectionInfo := ocpp.ConnectionInfo{

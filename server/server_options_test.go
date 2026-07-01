@@ -10,6 +10,81 @@ import (
 	"github.com/johnmaddison/ocpp-go/ocpp21"
 )
 
+func TestServerUsesDefaultResourceLimits(t *testing.T) {
+	s := NewServer(":0")
+
+	if s.readHeaderTimeout != 15*time.Second {
+		t.Fatalf("readHeaderTimeout = %v, want 15s", s.readHeaderTimeout)
+	}
+	if s.readTimeout != 60*time.Second {
+		t.Fatalf("readTimeout = %v, want 60s", s.readTimeout)
+	}
+	if s.idleTimeout != 120*time.Second {
+		t.Fatalf("idleTimeout = %v, want 120s", s.idleTimeout)
+	}
+	if s.maxHeaderBytes != 1<<20 {
+		t.Fatalf("maxHeaderBytes = %d, want 1 MiB", s.maxHeaderBytes)
+	}
+	if s.websocketReadLimit != 4<<20 {
+		t.Fatalf("websocketReadLimit = %d, want 4 MiB", s.websocketReadLimit)
+	}
+	if !s.websocketCompression {
+		t.Fatal("expected websocket compression to be enabled by default")
+	}
+	if s.pingInterval != 30*time.Second {
+		t.Fatalf("pingInterval = %v, want 30s", s.pingInterval)
+	}
+	if s.pongTimeout != 45*time.Second {
+		t.Fatalf("pongTimeout = %v, want 45s", s.pongTimeout)
+	}
+}
+
+func TestServerResourceLimitOptionsOverrideDefaults(t *testing.T) {
+	s := NewServer(":0",
+		WithHTTPTimeouts(time.Second, 2*time.Second, 3*time.Second),
+		WithMaxHeaderBytes(4096),
+		WithWebsocketReadLimit(1024),
+		WithWebsocketCompression(false),
+		WithWebsocketKeepalive(4*time.Second, 5*time.Second),
+	)
+
+	if s.readHeaderTimeout != time.Second {
+		t.Fatalf("readHeaderTimeout = %v, want 1s", s.readHeaderTimeout)
+	}
+	if s.readTimeout != 2*time.Second {
+		t.Fatalf("readTimeout = %v, want 2s", s.readTimeout)
+	}
+	if s.idleTimeout != 3*time.Second {
+		t.Fatalf("idleTimeout = %v, want 3s", s.idleTimeout)
+	}
+	if s.maxHeaderBytes != 4096 {
+		t.Fatalf("maxHeaderBytes = %d, want 4096", s.maxHeaderBytes)
+	}
+	if s.websocketReadLimit != 1024 {
+		t.Fatalf("websocketReadLimit = %d, want 1024", s.websocketReadLimit)
+	}
+	if s.websocketCompression {
+		t.Fatal("expected websocket compression to be disabled")
+	}
+	if s.pingInterval != 4*time.Second {
+		t.Fatalf("pingInterval = %v, want 4s", s.pingInterval)
+	}
+	if s.pongTimeout != 5*time.Second {
+		t.Fatalf("pongTimeout = %v, want 5s", s.pongTimeout)
+	}
+}
+
+func TestServerWebsocketKeepaliveCanBeDisabled(t *testing.T) {
+	s := NewServer(":0", WithWebsocketKeepalive(0, 0))
+
+	if s.pingInterval != 0 {
+		t.Fatalf("pingInterval = %v, want disabled", s.pingInterval)
+	}
+	if s.pongTimeout != 0 {
+		t.Fatalf("pongTimeout = %v, want disabled", s.pongTimeout)
+	}
+}
+
 func TestServerUsesDefaultMessageIDGenerator(t *testing.T) {
 	s := NewServer(":0")
 	if s.messageIDGenerator == nil {

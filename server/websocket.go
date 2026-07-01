@@ -13,9 +13,6 @@ import (
 	"github.com/johnmaddison/ocpp-go/ocpp21"
 )
 
-var upgrader = websocket.Upgrader{Subprotocols: []string{"ocpp1.6"}, ReadBufferSize: 2048,
-	WriteBufferSize: 2048, EnableCompression: true}
-
 func (o *Server) wshandler(w http.ResponseWriter, r *http.Request) {
 	cpid := r.PathValue("cpid")
 
@@ -40,8 +37,12 @@ func (o *Server) wshandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	localUpgrader := upgrader
-	localUpgrader.Subprotocols = protocols
+	localUpgrader := websocket.Upgrader{
+		Subprotocols:      protocols,
+		ReadBufferSize:    2048,
+		WriteBufferSize:   2048,
+		EnableCompression: o.websocketCompression,
+	}
 
 	c, err := localUpgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -66,6 +67,7 @@ func (o *Server) wshandler(w http.ResponseWriter, r *http.Request) {
 		LogKeepalive: o.logKeepalive,
 		PingInterval: o.pingInterval,
 		PongTimeout:  o.pongTimeout,
+		ReadLimit:    o.websocketReadLimit,
 	})
 }
 

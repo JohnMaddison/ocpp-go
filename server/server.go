@@ -15,6 +15,16 @@ import (
 	"github.com/johnmaddison/ocpp-go/ocpp21"
 )
 
+const (
+	defaultReadHeaderTimeout     = 15 * time.Second
+	defaultReadTimeout           = 60 * time.Second
+	defaultIdleTimeout           = 120 * time.Second
+	defaultMaxHeaderBytes        = 1 << 20
+	defaultWebsocketReadLimit    = 4 << 20
+	defaultWebsocketPingInterval = 30 * time.Second
+	defaultWebsocketPongTimeout  = 45 * time.Second
+)
+
 type Server struct {
 	mu               sync.Mutex
 	address          string
@@ -40,9 +50,15 @@ type Server struct {
 	tlsCert    string
 	tlsKey     string
 	// Websocket keepalive options
-	pingInterval       time.Duration
-	pongTimeout        time.Duration
-	messageIDGenerator uuidgenerator.MessageIDGeneratorMethod
+	pingInterval         time.Duration
+	pongTimeout          time.Duration
+	websocketReadLimit   int64
+	websocketCompression bool
+	readHeaderTimeout    time.Duration
+	readTimeout          time.Duration
+	idleTimeout          time.Duration
+	maxHeaderBytes       int
+	messageIDGenerator   uuidgenerator.MessageIDGeneratorMethod
 }
 
 // Option configures a Server.
@@ -51,11 +67,19 @@ type Option func(*Server)
 // NewServer creates a new configurable OCPP server using options.
 func NewServer(address string, opts ...Option) *Server {
 	s := &Server{
-		address:            address,
-		path:               "ocpp",
-		activeWebsockets:   make(map[*websocket.Conn]struct{}),
-		sessions:           make(map[string]*Session),
-		messageIDGenerator: uuidgenerator.DefaultUUIDGenerator,
+		address:              address,
+		path:                 "ocpp",
+		activeWebsockets:     make(map[*websocket.Conn]struct{}),
+		sessions:             make(map[string]*Session),
+		pingInterval:         defaultWebsocketPingInterval,
+		pongTimeout:          defaultWebsocketPongTimeout,
+		websocketReadLimit:   defaultWebsocketReadLimit,
+		websocketCompression: true,
+		readHeaderTimeout:    defaultReadHeaderTimeout,
+		readTimeout:          defaultReadTimeout,
+		idleTimeout:          defaultIdleTimeout,
+		maxHeaderBytes:       defaultMaxHeaderBytes,
+		messageIDGenerator:   uuidgenerator.DefaultUUIDGenerator,
 	}
 	for _, opt := range opts {
 		opt(s)
@@ -141,12 +165,43 @@ func (s *Server) protocols() []string {
 }
 
 // WithWebsocketKeepalive configures periodic websocket pings and pong timeout.
-// A non-positive interval disables the keepalive.
+// Keepalive is enabled by default. Pass an interval <= 0 to disable it:
+// server.WithWebsocketKeepalive(0, 0).
 // When pongTimeout is zero or negative, a default of twice the interval is used.
 func WithWebsocketKeepalive(interval, pongTimeout time.Duration) Option {
 	return func(s *Server) {
 		s.pingInterval = interval
 		s.pongTimeout = pongTimeout
+	}
+}
+
+// WithHTTPTimeouts configures HTTP server read and idle timeouts.
+func WithHTTPTimeouts(readHeaderTimeout, readTimeout, idleTimeout time.Duration) Option {
+	return func(s *Server) {
+		s.readHeaderTimeout = readHeaderTimeout
+		s.readTimeout = readTimeout
+		s.idleTimeout = idleTimeout
+	}
+}
+
+// WithMaxHeaderBytes configures the maximum HTTP request header size.
+func WithMaxHeaderBytes(max int) Option {
+	return func(s *Server) {
+		s.maxHeaderBytes = max
+	}
+}
+
+// WithWebsocketReadLimit configures the maximum websocket message size.
+func WithWebsocketReadLimit(limit int64) Option {
+	return func(s *Server) {
+		s.websocketReadLimit = limit
+	}
+}
+
+// WithWebsocketCompression enables or disables websocket compression.
+func WithWebsocketCompression(enabled bool) Option {
+	return func(s *Server) {
+		s.websocketCompression = enabled
 	}
 }
 
@@ -197,8 +252,12 @@ func (s *Server) Serve() error {
 	})
 
 	httpServer := &http.Server{
-		Addr:    s.address,
-		Handler: mux,
+		Addr:              s.address,
+		Handler:           mux,
+		ReadHeaderTimeout: s.readHeaderTimeout,
+		ReadTimeout:       s.readTimeout,
+		IdleTimeout:       s.idleTimeout,
+		MaxHeaderBytes:    s.maxHeaderBytes,
 	}
 	s.mu.Lock()
 	s.httpServer = httpServer
