@@ -17,7 +17,7 @@ type Options struct {
 	Logf func(format string, args ...any)
 	// PingInterval enables websocket pings when greater than zero.
 	PingInterval time.Duration
-	// PongTimeout controls how long to wait for the corresponding pong response.
+	// PongTimeout controls how long to wait after a ping interval for inbound activity.
 	// When zero, a default of twice the PingInterval is used.
 	PongTimeout time.Duration
 	// LogKeepalive records ping/pong traffic when enabled.
@@ -58,16 +58,19 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 	if pingInterval > 0 && pongTimeout <= 0 {
 		pongTimeout = pingInterval * 2
 	}
+	extendKeepaliveReadDeadline := func() error {
+		return conn.SetReadDeadline(time.Now().Add(pingInterval + pongTimeout))
+	}
 
 	if pingInterval > 0 {
-		if err := conn.SetReadDeadline(time.Now().Add(pongTimeout)); err != nil {
+		if err := extendKeepaliveReadDeadline(); err != nil {
 			logf("failed to set initial read deadline: %v", err)
 		}
 		conn.SetPongHandler(func(appData string) error {
 			if opt != nil && opt.LogKeepalive {
 				logf("recv: [websocket pong]")
 			}
-			return conn.SetReadDeadline(time.Now().Add(pongTimeout))
+			return extendKeepaliveReadDeadline()
 		})
 	}
 	if opt != nil && opt.ReadLimit > 0 {
@@ -108,7 +111,7 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 				logf("recv: %s", string(message))
 			}
 			if pingInterval > 0 {
-				if err := conn.SetReadDeadline(time.Now().Add(pongTimeout)); err != nil {
+				if err := extendKeepaliveReadDeadline(); err != nil {
 					logf("failed to extend read deadline: %v", err)
 				}
 			}
