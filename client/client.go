@@ -115,6 +115,18 @@ func (c *Client) WithDisconnectHandler(callback ocpp.DisconnectCallback) *Client
 	return c
 }
 
+// WithMessageReceivedHandler sets a callback for inbound OCPP websocket text frames.
+func (c *Client) WithMessageReceivedHandler(callback ocpp.MessageCallback) *Client {
+	c.socketCallbacks.MessageReceived = callback
+	return c
+}
+
+// WithMessageSentHandler sets a callback for outbound OCPP websocket text frames.
+func (c *Client) WithMessageSentHandler(callback ocpp.MessageCallback) *Client {
+	c.socketCallbacks.MessageSent = callback
+	return c
+}
+
 // WithOfflineHandler is an alias for WithDisconnectHandler.
 func (c *Client) WithOfflineHandler(callback ocpp.DisconnectCallback) *Client {
 	return c.WithDisconnectHandler(callback)

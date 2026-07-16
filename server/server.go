@@ -139,6 +139,16 @@ func WithDisconnectHandler(callback ocpp.DisconnectCallback) Option {
 	return func(s *Server) { s.socketCallbacks.Disconnect = callback }
 }
 
+// WithMessageReceivedHandler sets a callback for inbound OCPP websocket text frames.
+func WithMessageReceivedHandler(callback ocpp.MessageCallback) Option {
+	return func(s *Server) { s.socketCallbacks.MessageReceived = callback }
+}
+
+// WithMessageSentHandler sets a callback for outbound OCPP websocket text frames.
+func WithMessageSentHandler(callback ocpp.MessageCallback) Option {
+	return func(s *Server) { s.socketCallbacks.MessageSent = callback }
+}
+
 // WithPath sets the URL base path (default: "ocpp").
 func WithPath(path string) Option { return func(s *Server) { s.path = path } }
 

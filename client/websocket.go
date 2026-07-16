@@ -55,6 +55,7 @@ func (c *Client) runtime() (ws.Runtime, error) {
 		c.Context16 = ocpp16.NewContextWithMessageIDGenerator(c.chargePointID, c.messageIDGenerator)
 		return ws.Runtime{
 			ChargePointID: c.Context16.ChargePointID,
+			Protocol:      c.subprotocol,
 			OutgoingCalls: requestChannel[ocpp16.Request](c.Context16.Queue),
 			Parse: func(message []byte) ([]byte, error) {
 				return c.ocppCallbacks.ParseMessage(message, c.Context16)
@@ -68,6 +69,7 @@ func (c *Client) runtime() (ws.Runtime, error) {
 		c.Context21 = ocpp21.NewContextWithMessageIDGenerator(c.chargePointID, c.messageIDGenerator)
 		return ws.Runtime{
 			ChargePointID: c.Context21.ChargePointID,
+			Protocol:      c.subprotocol,
 			OutgoingCalls: requestChannel[ocpp21.Request](c.Context21.Queue),
 			Parse: func(message []byte) ([]byte, error) {
 				return c.ocpp21Callbacks.ParseMessage(message, c.Context21)

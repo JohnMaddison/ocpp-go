@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/johnmaddison/ocpp-go"
 	"github.com/johnmaddison/ocpp-go/ocpp16"
 	"github.com/johnmaddison/ocpp-go/ocpp21"
 )
@@ -59,6 +60,33 @@ func TestClientMessageIDGeneratorCanBeOverridden(t *testing.T) {
 
 	if got := c.messageIDGenerator(); got != "custom-id" {
 		t.Fatalf("expected custom-id, got %q", got)
+	}
+}
+
+func TestClientMessageHandlersAreChainableAndRuntimeHasProtocol(t *testing.T) {
+	received := func(info ocpp.MessageInfo) {}
+	sent := func(info ocpp.MessageInfo) {}
+	c := New16("CP_1", "ws://127.0.0.1:9001/ocpp")
+
+	if got := c.WithMessageReceivedHandler(received); got != c {
+		t.Fatal("WithMessageReceivedHandler should be chainable")
+	}
+	if got := c.WithMessageSentHandler(sent); got != c {
+		t.Fatal("WithMessageSentHandler should be chainable")
+	}
+	if c.socketCallbacks.MessageReceived == nil {
+		t.Fatal("expected message received handler")
+	}
+	if c.socketCallbacks.MessageSent == nil {
+		t.Fatal("expected message sent handler")
+	}
+
+	runtime, err := c.runtime()
+	if err != nil {
+		t.Fatalf("runtime returned error: %v", err)
+	}
+	if runtime.Protocol != "ocpp1.6" {
+		t.Fatalf("runtime protocol = %q, want ocpp1.6", runtime.Protocol)
 	}
 }
 

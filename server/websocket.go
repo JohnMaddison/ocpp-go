@@ -133,6 +133,7 @@ func (o *Server) runtime(cpid, protocol string, remoteAddr, localAddr net.Addr) 
 		}
 		return ws.Runtime{
 			ChargePointID: context.ChargePointID,
+			Protocol:      protocol,
 			OutgoingCalls: requestChannel[ocpp16.Request](context.Queue),
 			Parse: func(message []byte) ([]byte, error) {
 				return parser(message, context)
@@ -153,6 +154,7 @@ func (o *Server) runtime(cpid, protocol string, remoteAddr, localAddr net.Addr) 
 		}
 		return ws.Runtime{
 			ChargePointID: context.ChargePointID,
+			Protocol:      protocol,
 			OutgoingCalls: requestChannel[ocpp21.Request](context.Queue),
 			Parse: func(message []byte) ([]byte, error) {
 				return o.ocpp21Callbacks.ParseMessage(message, context)

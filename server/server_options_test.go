@@ -2,10 +2,12 @@ package server
 
 import (
 	"encoding/json"
+	"net"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/johnmaddison/ocpp-go"
 	"github.com/johnmaddison/ocpp-go/ocpp16"
 	"github.com/johnmaddison/ocpp-go/ocpp21"
 )
@@ -99,6 +101,30 @@ func TestServerMessageIDGeneratorCanBeOverridden(t *testing.T) {
 	s := NewServer(":0", WithMessageIDGenerator(func() string { return "custom-id" }))
 	if got := s.messageIDGenerator(); got != "custom-id" {
 		t.Fatalf("expected custom-id, got %q", got)
+	}
+}
+
+func TestServerMessageHandlersAreStoredAndRuntimeHasProtocol(t *testing.T) {
+	received := func(info ocpp.MessageInfo) {}
+	sent := func(info ocpp.MessageInfo) {}
+	s := NewServer(":0",
+		WithMessageReceivedHandler(received),
+		WithMessageSentHandler(sent),
+	)
+
+	if s.socketCallbacks.MessageReceived == nil {
+		t.Fatal("expected message received handler")
+	}
+	if s.socketCallbacks.MessageSent == nil {
+		t.Fatal("expected message sent handler")
+	}
+
+	runtime, _, ok := s.runtime("CP_1", "ocpp1.6", &net.TCPAddr{}, &net.TCPAddr{})
+	if !ok {
+		t.Fatal("expected ocpp1.6 runtime")
+	}
+	if runtime.Protocol != "ocpp1.6" {
+		t.Fatalf("runtime protocol = %q, want ocpp1.6", runtime.Protocol)
 	}
 }
 

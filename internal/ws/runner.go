@@ -29,6 +29,7 @@ type Options struct {
 // Runtime provides protocol-specific behavior for a websocket connection.
 type Runtime struct {
 	ChargePointID string
+	Protocol      string
 	OutgoingCalls func(done <-chan struct{}) <-chan any
 	Parse         func(message []byte) ([]byte, error)
 	Serialize     func(call any) ([]byte, error)
@@ -84,6 +85,24 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 	if socketCallbacks.Connected != nil {
 		socketCallbacks.Connected(connectionInfo)
 	}
+	messageInfo := func(direction ocpp.MessageDirection, message []byte) ocpp.MessageInfo {
+		return ocpp.MessageInfo{
+			ConnectionInfo: connectionInfo,
+			Protocol:       runtime.Protocol,
+			Direction:      direction,
+			Message:        append([]byte(nil), message...),
+		}
+	}
+	notifyReceived := func(message []byte) {
+		if socketCallbacks.MessageReceived != nil {
+			socketCallbacks.MessageReceived(messageInfo(ocpp.MessageDirectionReceived, message))
+		}
+	}
+	notifySent := func(message []byte) {
+		if socketCallbacks.MessageSent != nil {
+			socketCallbacks.MessageSent(messageInfo(ocpp.MessageDirectionSent, message))
+		}
+	}
 
 	outgoingResponses := make(chan []byte, 10)
 	done := make(chan struct{})
@@ -97,6 +116,7 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 	go func() {
 		defer wg.Done()
 		defer closeDoneFunc()
+		defer close(outgoingResponses)
 
 		for {
 			mt, message, err := conn.ReadMessage()
@@ -110,6 +130,7 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 			if opt != nil && opt.LogSent {
 				logf("recv: %s", string(message))
 			}
+			notifyReceived(message)
 			if pingInterval > 0 {
 				if err := extendKeepaliveReadDeadline(); err != nil {
 					logf("failed to extend read deadline: %v", err)
@@ -135,7 +156,6 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 
 	go func() {
 		defer wg.Done()
-		defer close(outgoingResponses)
 
 		var pingTicker *time.Ticker
 		var pingC <-chan time.Time
@@ -160,6 +180,7 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 				if opt != nil && opt.LogSent {
 					logf("sent: %s", string(response))
 				}
+				notifySent(response)
 			case message, ok := <-outgoingCalls:
 				if !ok {
 					return
@@ -178,6 +199,7 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 				if opt != nil && opt.LogSent {
 					logf("sent: %s", string(payload))
 				}
+				notifySent(payload)
 			case <-pingC:
 				deadline := time.Now().Add(pongTimeout)
 				if err := conn.SetWriteDeadline(deadline); err != nil {
