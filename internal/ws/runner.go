@@ -108,7 +108,12 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 	done := make(chan struct{})
 	outgoingCalls := runtime.OutgoingCalls(done)
 	var closeDone sync.Once
-	closeDoneFunc := func() { closeDone.Do(func() { close(done) }) }
+	closeDoneFunc := func() {
+		closeDone.Do(func() {
+			close(done)
+			_ = conn.Close()
+		})
+	}
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -139,7 +144,7 @@ func Run(conn *websocket.Conn, runtime Runtime, socketCallbacks ocpp.SocketCallb
 			response, err := runtime.Parse(message)
 			if err != nil {
 				log.Printf("parseMessage error: %s", err)
-				conn.Close()
+				closeDoneFunc()
 				break
 			}
 			if response == nil {

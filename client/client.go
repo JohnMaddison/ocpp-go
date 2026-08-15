@@ -2,15 +2,33 @@
 package client
 
 import (
+	"context"
+	"errors"
+	"net"
+	"sync"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/johnmaddison/ocpp-go"
 	"github.com/johnmaddison/ocpp-go/internal/uuidgenerator"
 	"github.com/johnmaddison/ocpp-go/ocpp16"
 	"github.com/johnmaddison/ocpp-go/ocpp21"
 )
 
+// ErrAlreadyConnected is returned when Connect or ConnectContext is called
+// while the client is already dialing or connected.
+var ErrAlreadyConnected = errors.New("ocpp client is already connected or connecting")
+
+type connectionState struct {
+	cancel   context.CancelFunc
+	dialConn net.Conn
+	conn     *websocket.Conn
+	done     chan struct{}
+}
+
 type Client struct {
+	mu                 sync.Mutex
+	connection         *connectionState
 	chargePointID      string
 	address            string
 	ocppCallbacks      ocpp16.Callbacks
